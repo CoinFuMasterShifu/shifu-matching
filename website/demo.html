@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Demo</title>
+    </head>
+
+    <script charset="utf-8">
+        var Module = {
+          onRuntimeInitialized: () => {
+              console.log("runtime initialized")
+          }
+        }
+        function addBuy() {
+        // console.log("Click")
+        // Module._sayHi(); // direct calling works
+        // Module.ccall("sayHi"); // using ccall etc. also work
+        // console.log(Module._daysInWeek()); // values can be returned, etc.
+}
+    </script>
+    <script type="module">
+        import initModule from "./demo.js";
+          initModule(Module);
+    </script>
+    <script charset="utf-8">
+        function getOrder() {
+            return {
+               price: document.getElementById("price").value,
+               amount: document.getElementById("amount").value
+            }
+        }
+        function insertRow(obj,rowarr){
+            var row = obj.insertRow(-1);
+            for (var i=0; i<rowarr.length; ++i){
+                row.insertCell(i).innerText = rowarr[i];
+            }
+        }
+        function price(base,quote){
+            if (base != 0){
+                return quote/base;
+            }
+            return "N/A";
+        }
+        function updateData(res){
+            console.log(res);
+            if (res["error"] != null){
+                alert("Error" + res["error"]);
+            }else{
+                var buys = res.buys
+                var tbodyBuy = document.getElementById("tbodyBuy")
+                tbodyBuy.innerHTML=""
+                for (var i=0, len = buys.length; i<len; i++){
+                    insertRow(tbodyBuy,[buys[i]["amount"],buys[i]["filled"],buys[i]["limit"]]);
+                }
+                var sells = res.sells
+                var tbodySell = document.getElementById("tbodySell")
+                tbodySell.innerHTML=""
+                for (var i=0, len = sells.length; i<len; i++){
+                    insertRow(tbodySell,[sells[i]["amount"],sells[i]["filled"],sells[i]["limit"]]);
+                }
+            }
+            var tbodyPool = document.getElementById("tbodyPool")
+            tbodyPool.innerHTML=""
+            insertRow(tbodyPool,["before",res.poolBefore.base, res.poolBefore.quote, res.poolBefore.price]);
+            insertRow(tbodyPool,["after",res.poolAfter.base, res.poolAfter.quote, res.poolAfter.price]);
+
+            var tbodyBuyers = document.getElementById("tbodyBuyers")
+            tbodyBuyers.innerHTML=""
+            insertRow(tbodyBuyers,["via orders",res.matched.quote, res.matched.base, price(res.matched.base, res.matched.quote)]);
+            if (res.toPool.isQuote){
+                insertRow(tbodyBuyers,["via pool",res.toPool.in, res.toPool.out, price(res.toPool.out, res.toPool.in)]);
+                var totalQuote = res.matched.quote + res.toPool.in;
+                var totalBase = res.matched.base + res.toPool.out;
+                insertRow(tbodyBuyers,["total",totalQuote, totalBase, price(totalBase, totalQuote)]);
+            }
+
+            var tbodySellers = document.getElementById("tbodySellers")
+            tbodySellers.innerHTML=""
+            insertRow(tbodySellers,["orders",res.matched.base, res.matched.quote, price(res.matched.base, res.matched.quote)]);
+            if (!res.toPool.isQuote){
+                insertRow(tbodySellers,["via pool",res.toPool.in, res.toPool.out, price(res.toPool.in, res.toPool.out)]);
+                var totalBase = res.matched.base + res.toPool.in;
+                var totalQuote = res.matched.quote + res.toPool.out;
+                insertRow(tbodySellers,["total",totalBase, totalQuote, price(totalBase, totalQuote)]);
+            }
+
+
+
+
+        }
+        function addSell() {
+            var str = JSON.stringify(getOrder());
+            var res = JSON.parse(Module.ccall("addSell","string",["string"],[str]))
+            updateData(res);
+        }
+        function addBuy() {
+            var str = JSON.stringify(getOrder());
+            var res = JSON.parse(Module.ccall("addBuy","string",["string"],[str]));
+            updateData(res);
+        }
+    </script>
+
+    <body>
+        <div>
+            <label for="price">Limit price:</label>
+            <input type="text" id="price" name="price" value="1.0"><br><br>
+            <label for="amount">Amount:</label>
+            <input type="text" id="amount" name="amount"><br><br>
+            <button onclick="addBuy()">Swap WART to Token (Buy TOKEN)</button>
+            <button onclick="addSell()">Swap TOKEN to WART (Sell TOKEN)</button>
+            <div>
+                <h2>Order Book:</h2>
+                Sell:
+                <table>
+                    <thead>
+                        <tr>
+                            <th>AMOUNT</th>
+                            <th>FILLED</th>
+                            <th>LIMIT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodySell">
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                Buy:
+                <table>
+                    <thead>
+                        <tr>
+                            <th>AMOUNT</th>
+                            <th>FILLED</th>
+                            <th>LIMIT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyBuy">
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>Pool:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>TOKEN</th>
+                            <th>WART</th>
+                            <th>PRICE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyPool">
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>Buyers:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>FROM (WART)</th>
+                            <th>TO (TOKEN)</th>
+                            <th>PRICE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyBuyers">
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>Sellers:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>FROM (TOKEN)</th>
+                            <th>TO (WART)</th>
+                            <th>PRICE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodySellers">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
