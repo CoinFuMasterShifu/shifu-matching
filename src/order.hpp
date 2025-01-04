@@ -1,12 +1,11 @@
 #pragma once
+#include "funds.hpp"
 #include "price.hpp"
-
-#include <cstdint>
 namespace defi{
     struct Order {
         uint64_t amount;
         Price limit;
-        Order(uint64_t amount, Price limit) : amount(amount), limit(limit) {}
+        Order(Funds amount, Price limit) : amount(amount.E8()), limit(limit) {}
     };
     struct PullBaseOrder : public Order { // sells quote
         using Order::Order;

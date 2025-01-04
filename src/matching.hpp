@@ -206,11 +206,9 @@ struct BuySellOrders {
 private:
   Ordervec pushQuoteDesc; // limit price DESC (buy)
   std::vector<ExtraData> extraQuote;
-  size_t dirtyQuote{0};
 
   Ordervec pushBaseAsc; // limit price ASC (sell)
   std::vector<ExtraData> extraBase;
-  size_t dirtyBase{0};
 };
 } // namespace ordervec
 using ordervec::BuySellOrders;

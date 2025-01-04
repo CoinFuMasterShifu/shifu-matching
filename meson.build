@@ -4,7 +4,8 @@ project('defi', 'cpp',
                      'cpp_std=c++20'])
 
 src = files([
-'src/matching.cpp'
+'src/matching.cpp',
+'src/funds.cpp'
 ])
 
 json = subproject('json')

@@ -24,12 +24,6 @@
           initModule(Module);
     </script>
     <script charset="utf-8">
-        function getOrder() {
-            return {
-               price: document.getElementById("price").value,
-               amount: document.getElementById("amount").value
-            }
-        }
         function insertRow(obj,rowarr){
             var row = obj.insertRow(-1);
             for (var i=0; i<rowarr.length; ++i){
@@ -90,12 +84,18 @@
 
         }
         function addSell() {
-            var str = JSON.stringify(getOrder());
+            var str = JSON.stringify({
+               price: document.getElementById("sellPrice").value,
+               amount: document.getElementById("tokenAmount").value
+            });
             var res = JSON.parse(Module.ccall("addSell","string",["string"],[str]))
             updateData(res);
         }
         function addBuy() {
-            var str = JSON.stringify(getOrder());
+            var str = JSON.stringify({
+               price: document.getElementById("buyPrice").value,
+               amount: document.getElementById("wartAmount").value
+            });
             var res = JSON.parse(Module.ccall("addBuy","string",["string"],[str]));
             updateData(res);
         }
@@ -103,12 +103,7 @@
 
     <body>
         <div>
-            <label for="price">Limit price:</label>
-            <input type="text" id="price" name="price" value="1.0"><br><br>
-            <label for="amount">Amount:</label>
-            <input type="text" id="amount" name="amount"><br><br>
-            <button onclick="addBuy()">Swap WART to Token (Buy TOKEN)</button>
-            <button onclick="addSell()">Swap TOKEN to WART (Sell TOKEN)</button>
+            
             <div>
                 <h2>Order Book:</h2>
                 Sell:
@@ -123,6 +118,11 @@
                     <tbody id="tbodySell">
                     </tbody>
                 </table>
+                <label for="sellPrice">Limit price (WART/TOKEN):</label>
+                <input type="text" id="sellPrice" name="sellPrice" value="1.0"><br><br>
+                <label for="tokenAmount">Amount (TOKEN):</label>
+                <input type="text" id="tokenAmount" name="tokenAmount"><br><br>
+                <button onclick="addSell()">Limit Swap TOKEN to WART (Sell x TOKEN for WART)</button>
             </div>
             <div>
                 Buy:
@@ -137,6 +137,11 @@
                     <tbody id="tbodyBuy">
                     </tbody>
                 </table>
+                <label for="buyPrice">Limit price (WART/TOKEN):</label>
+                <input type="text" id="buyPrice" name="buyPrice" value="1.0"><br><br>
+                <label for="wartAmount">Amount (WART):</label>
+                <input type="text" id="wartAmount" name="wartAmount"><br><br>
+                <button onclick="addBuy()">Limit Swap WART to TOKEN (Buy TOKEN with x WART)</button>
             </div>
             <div>
                 <h2>Pool:</h2>

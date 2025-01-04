@@ -1,3 +1,4 @@
+#include "funds.hpp"
 #include "matching.hpp"
 #include "nlohmann/json.hpp"
 #include "order.hpp"
@@ -16,8 +17,8 @@ defi::BuySellOrders bso;
 
 using json = nlohmann::json;
 json pool_json(defi::Pool &pool) {
-  return {{"base", pool.base_total()},
-          {"quote", pool.quote_total()},
+  return {{"base", Funds::from_value(pool.base_total()).value().to_string()},
+          {"quote", Funds::from_value(pool.quote_total()).value().to_string()},
           {"price", double(pool.quote_total()) / double(pool.base_total())}};
 }
 
@@ -36,9 +37,10 @@ json match_result() {
         match_res.notFilled->isQuote) {
       filled = elem.amount - match_res.notFilled->amount;
     }
-    buys.push_back({{"amount", elem.amount},
-                    {"filled", filled},
-                    {"limit", elem.limit.to_double()}});
+    buys.push_back(
+        {{"amount", Funds::from_value(elem.amount).value().to_string()},
+         {"filled", Funds::from_value(filled).value().to_string()},
+         {"limit", elem.limit.to_double()}});
   }
   json sells(json::array());
   auto J{bso.base_asc_sell().size()};
@@ -59,9 +61,10 @@ json match_result() {
         !match_res.notFilled->isQuote) {
       filled = elem.amount - match_res.notFilled->amount;
     }
-    sells.push_back({{"amount", elem.amount},
-                     {"filled", filled},
-                     {"limit", elem.limit.to_double()}});
+    sells.push_back(
+        {{"amount", Funds::from_value(elem.amount).value().to_string()},
+         {"filled", Funds::from_value(filled).value().to_string()},
+         {"limit", elem.limit.to_double()}});
   }
   std::reverse(sells.begin(), sells.end());
 
@@ -72,16 +75,18 @@ json match_result() {
     else
       return pTmp.sell(toPool.amount, 0);
   }()};
-  auto matched{match_res.filled-match_res.toPool};
+  auto matched{match_res.filled - match_res.toPool};
 
   return {{"buys", buys},
           {"sells", sells},
           {"poolBefore", pool_json(p)},
-          {"toPool",{
-           {"isQuote", toPool.isQuote},
-           {"in", toPool.amount},
-           {"out", poolSwapped}}},
-          {"matched",{{"base",matched.base}, {"quote", matched.quote}}},
+          {"toPool",
+           {{"isQuote", toPool.isQuote},
+            {"in", Funds::from_value(toPool.amount)->to_string()},
+            {"out", Funds::from_value(poolSwapped).value().to_string()}}},
+          {"matched",
+           {{"base", Funds::from_value(matched.base).value().to_string()},
+            {"quote", Funds::from_value(matched.quote).value().to_string()}}},
           {"poolAfter", pool_json(pTmp)}};
 }
 
@@ -109,10 +114,9 @@ defi::Order parse_order(json j) {
   auto amount{[&]() {
     try {
       std::string s{j["amount"].get<std::string>()};
-      uint64_t res;
-      auto r{std::from_chars(s.data(), s.data() + s.size(), res)};
-      if (r.ec == std::errc() && r.ptr == s.data() + s.size())
-        return res;
+      if (auto o{Funds::parse(s)})
+        return *o;
+
     } catch (...) {
     }
     throw std::runtime_error("Cannot get amount (must be a 64 bit integer)");
@@ -134,17 +138,8 @@ json add_sell(json j) {
 
 extern "C" {
 EMSCRIPTEN_KEEPALIVE
-void sayHi(char *a) {
-  printf("Hi!\n");
-  cout << a << endl;
-}
-
-EMSCRIPTEN_KEEPALIVE
 const char *addBuy(const char *json) { return wrap_fun(add_buy, json); }
 
 EMSCRIPTEN_KEEPALIVE
 const char *addSell(const char *json) { return wrap_fun(add_sell, json); }
-
-EMSCRIPTEN_KEEPALIVE
-int daysInWeek() { return 7; }
 }
