@@ -42,7 +42,7 @@ void from_fraction() {
 }
 } // namespace test
 
-void print_match(BuySellOrders &bso, Pool &p) {
+void print_match(BuySellOrders &bso, Pool_uint64 &p) {
   auto res{bso.match(p)};
   cout << "to pool: " << res.toPool.amount << " ("
        << (res.toPool.isQuote ? "quote" : "base") << ")\n";
@@ -69,14 +69,14 @@ void print_match(BuySellOrders &bso, Pool &p) {
 }
 int main() {
   using namespace defi;
-  Pool p(1000, 2000);
+  Pool_uint64 p(1000, 2000);
   cout << "Pool " << p.base_total() << " " << p.quote_total() << endl;
   cout << "Price: " << p.price().price.to_double() << endl;
   BuySellOrders bso;
-  bso.insert_base(Order(100, Price::from_double(2).value()));
-  bso.insert_base(Order(100, Price::from_double(1).value()));
-  bso.insert_quote(Order(200, Price::from_double(10).value()));
-  bso.insert_quote(Order(100, Price::from_double(2).value()));
+  bso.insert_base(Order_uint64(100, Price::from_double(2).value()));
+  bso.insert_base(Order_uint64(100, Price::from_double(1).value()));
+  bso.insert_quote(Order_uint64(200, Price::from_double(10).value()));
+  bso.insert_quote(Order_uint64(100, Price::from_double(2).value()));
   // bso.insert_quote(Order(301, Price::from_double(30.17).value()));
   print_match(bso, p);
 }

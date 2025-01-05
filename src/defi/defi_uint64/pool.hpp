@@ -1,36 +1,15 @@
 #pragma once
-#include<cstdint>
-#include "price.hpp"
+#include "../price.hpp"
+#include <cstdint>
 
 namespace defi {
-struct BuyTx {
-  uint64_t sellQuote;
-};
-struct BuyResult {
-  uint64_t payQuote;
-  uint64_t receiveBase;
-};
-struct SellTx {
-  uint64_t sellBase;
-};
-struct SellResult {
-  uint64_t payBase;
-  uint64_t receiveQuote;
-};
-class Pool {
-
+class Pool_uint64 {
 public:
-  Pool(uint64_t base, uint64_t quote) : baseTotal(base), quoteTotal(quote) {}
+  Pool_uint64(uint64_t base, uint64_t quote)
+      : baseTotal(base), quoteTotal(quote) {}
   struct Tokens {
     uint64_t val;
   };
-  BuyResult apply(BuyTx tx) {
-    return {.payQuote = tx.sellQuote, .receiveBase = buy(tx.sellQuote)};
-  }
-  SellResult apply(SellTx tx) {
-    return {.payBase = tx.sellBase, .receiveQuote = buy(tx.sellBase)};
-  }
-  struct MultiApplyResult {};
 
   PriceRelative price() {
     return PriceRelative::from_fraction(quoteTotal, baseTotal);
@@ -93,4 +72,6 @@ private:
   uint64_t quoteTotal;
   uint64_t tokensTotal;
 };
-}
+
+
+} // namespace defi

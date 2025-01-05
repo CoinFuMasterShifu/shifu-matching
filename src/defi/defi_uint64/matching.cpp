@@ -3,12 +3,12 @@
 namespace defi {
 class Matcher : public Evaluator {
 public:
-  Matcher(BuySellOrders &bso, Pool &p)
+  Matcher(BuySellOrders_uint64 &bso, Pool_uint64 &p)
       : Evaluator(p.base_total(), 0, p.quote_total(),
                   0), // TODO: initialize with pool
         toPool0{false, bso.pushBaseAsc.total_push()},
         toPool1{true, bso.pushQuoteDesc.total_push()} {}
-  Delta orderExcess(Price p) {
+  Delta_uint64 orderExcess(Price p) {
     if (quoteIntoPool1 == true) {
       auto q{multiply_floor(in.base, p)};
       if (q.has_value() && *q <= in.quote) // too much base
@@ -32,7 +32,7 @@ public:
     return needsIncrease;
   };
 
-  FillResult bisect_dynamic_price() {
+  FillResult_uint64 bisect_dynamic_price() {
     auto bisect = [](Evaluator::ret_t::Fill64Ratio ratio0, uint64_t v1,
                      auto asc_fun) {
       using ret_t = Evaluator::ret_t;
@@ -77,7 +77,7 @@ public:
       return {{false, toPool}, {}, in};
     }
   }
-  FillResult bisect_fixed_price(const bool isQuoteOrder, const uint64_t order0,
+  FillResult_uint64 bisect_fixed_price(const bool isQuoteOrder, const uint64_t order0,
                                 const uint64_t order1, Price p) {
     auto v0{order0};
     auto v1{order1};
@@ -93,19 +93,19 @@ public:
     v = (toPool0.isQuote? v0 : v1);
     auto toPool{toPool0.isQuote? toPool0 : toPool1};
     auto nf{std::max(order0, order1) - v};
-    std::optional<Delta> notFilled;
+    std::optional<Delta_uint64> notFilled;
     if (nf>0) {
-        notFilled = Delta{isQuoteOrder, nf};
+        notFilled = Delta_uint64{isQuoteOrder, nf};
     }
-    auto filled{isQuoteOrder ?BaseQuote{in.base,v}: BaseQuote{v,in.quote} };
+    auto filled{isQuoteOrder ?BaseQuote_uint64{in.base,v}: BaseQuote_uint64{v,in.quote} };
 
     return {.toPool{toPool}, .notFilled{notFilled}, .filled{filled}};
   };
   bool quoteIntoPool1{true};
-  Delta toPool0;
-  Delta toPool1;
+  Delta_uint64 toPool0;
+  Delta_uint64 toPool1;
 };
-auto BuySellOrders::match(Pool &p) -> MatchResult {
+auto BuySellOrders_uint64::match(Pool_uint64 &p) -> MatchResult_uint64 {
   const size_t I{pushQuoteDesc.size()};
   const size_t J{pushBaseAsc.size()};
   size_t i0{0};
@@ -123,7 +123,7 @@ auto BuySellOrders::match(Pool &p) -> MatchResult {
     else
       i1 = i;
   }
-  auto bisect_j = [&](size_t j0, size_t j1) -> MatchResult {
+  auto bisect_j = [&](size_t j0, size_t j1) -> MatchResult_uint64 {
     while (j0 != j1) {
       auto j{(j0 + j1) / 2};
       m.in.base = extraBase[j].cumsum;

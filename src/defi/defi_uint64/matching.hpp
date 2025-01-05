@@ -1,23 +1,23 @@
 #pragma once
+#include "../price.hpp"
 #include "order.hpp"
-#include "price.hpp"
 #include <cstdint>
 #include <variant>
 #include <vector>
 namespace defi {
-class Pool;
+class Pool_uint64;
 class Matcher;
 
-struct BaseQuote;
-struct Delta {
+struct BaseQuote_uint64;
+struct Delta_uint64 {
   bool isQuote{false};
   uint64_t amount;
-  BaseQuote base_quote() const;
+  BaseQuote_uint64 base_quote() const;
 };
-struct BaseQuote {
+struct BaseQuote_uint64 {
   uint64_t base;
   uint64_t quote;
-  BaseQuote operator-(const Delta &bq) const {
+  BaseQuote_uint64 operator-(const Delta_uint64 &bq) const {
     auto res{*this};
     if (bq.isQuote)
       res.quote -= bq.amount;
@@ -27,22 +27,22 @@ struct BaseQuote {
   }
   auto price() const { return PriceRelative::from_fraction(quote, base); }
 };
-inline BaseQuote Delta::base_quote() const{
-    if (isQuote) 
-        return {0,amount};
-    return {amount,0};
+inline BaseQuote_uint64 Delta_uint64::base_quote() const {
+  if (isQuote)
+    return {0, amount};
+  return {amount, 0};
 }
 
-struct FillResult {
-  Delta toPool;
-  std::optional<Delta> notFilled;
-  BaseQuote filled;
+struct FillResult_uint64 {
+  Delta_uint64 toPool;
+  std::optional<Delta_uint64> notFilled;
+  BaseQuote_uint64 filled;
 };
-struct MatchResult: public FillResult {
-    size_t quoteBound; 
-    size_t baseBound;
+struct MatchResult_uint64 : public FillResult_uint64 {
+  size_t quoteBound;
+  size_t baseBound;
 };
- 
+
 class Evaluator {
   static std::pair<std::strong_ordering, Prod192> take_smaller(Prod192 &a,
                                                                Prod192 &b) {
@@ -57,8 +57,8 @@ public:
             uint64_t quoteIn)
       : in{baseIn, quoteIn}, pool{basePool, quotePool} {}
 
-  BaseQuote in;
-  BaseQuote pool;
+  BaseQuote_uint64 in;
+  BaseQuote_uint64 pool;
   struct ret_t {
     std::strong_ordering rel;
     struct Pool128Ratio {
@@ -119,8 +119,8 @@ public:
 };
 
 namespace ordervec {
-struct elem_t : public Order {
-  elem_t(Order o) : Order(std::move(o)) {}
+struct elem_t : public Order_uint64 {
+  elem_t(Order_uint64 o) : Order_uint64(std::move(o)) {}
 
   auto operator<=>(const elem_t &o) const {
     return limit.operator<=>(o.limit);
@@ -155,7 +155,7 @@ private:
   uint64_t total{0};
 };
 
-struct BuySellOrders {
+class BuySellOrders_uint64 {
   friend class defi::Matcher;
   struct ExtraData {
     uint64_t cumsum;
@@ -188,20 +188,19 @@ struct BuySellOrders {
       cumsumBase -= pushBaseAsc[J - 1 - j].amount;
     }
   }
-  struct Bisecter {
-    /* data */
-  };
-  [[nodiscard]] MatchResult match(Pool &p);
-  auto insert_base(elem_t e) {
-    pushBaseAsc.insert_asc(e);
+
+public:
+  [[nodiscard]] MatchResult_uint64 match(Pool_uint64 &p);
+  auto insert_base(Order_uint64 o) {
+    pushBaseAsc.insert_asc(elem_t{o});
     prepare();
   }
-  auto insert_quote(elem_t e) {
-    pushQuoteDesc.insert_desc(e);
+  auto insert_quote(Order_uint64 o) {
+    pushQuoteDesc.insert_desc(elem_t{o});
     prepare();
   }
-  auto& quote_desc_buy() const {return pushQuoteDesc;}
-  auto& base_asc_sell() const {return pushBaseAsc;}
+  auto &quote_desc_buy() const { return pushQuoteDesc; }
+  auto &base_asc_sell() const { return pushBaseAsc; }
 
 private:
   Ordervec pushQuoteDesc; // limit price DESC (buy)
@@ -211,6 +210,6 @@ private:
   std::vector<ExtraData> extraBase;
 };
 } // namespace ordervec
-using ordervec::BuySellOrders;
+using ordervec::BuySellOrders_uint64;
 
 } // namespace defi

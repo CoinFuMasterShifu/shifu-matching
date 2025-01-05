@@ -75,6 +75,7 @@ public:
   }
 
   void subtract_assert(Funds f) { *this = diff_assert(*this, f); }
+  void subtract_throw(Funds f) { *this = diff_throw(*this, f); }
   static std::optional<Funds> diff(Funds a, Funds b) {
     if (a.val < b.val)
       return {};
