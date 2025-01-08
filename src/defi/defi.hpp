@@ -75,14 +75,27 @@ struct BaseQuote {
       : base(Funds::from_value_throw(bq.base)),
         quote(Funds::from_value_throw(bq.quote)) {}
   BaseQuote(Funds base, Funds quote) : base(base), quote(quote) {}
+  BaseQuote() : BaseQuote(Funds::zero(), Funds::zero()) {}
   Funds base;
   Funds quote;
-  [[nodiscard]] BaseQuote diff_throw(const BaseQuote &bq) const {
-    return {Funds::diff_throw(base, bq.base),
-            Funds::diff_throw(quote, bq.quote)};
+  BaseQuote &add_throw(const BaseQuote &bq) {
+    base.add_throw(bq.base);
+    quote.add_throw(bq.quote);
+    return *this;
   }
-  [[nodiscard]] auto diff_throw(const Delta &d) const {
-    return diff_throw(d.base_quote());
+  BaseQuote &subtract_throw(const BaseQuote &bq) {
+    base.subtract_throw(bq.base);
+    quote.subtract_throw(bq.quote);
+    return *this;
+  }
+  auto &subtract_throw(const Delta &d) {
+    return subtract_throw(d.base_quote());
+  }
+  [[nodiscard]] std::optional<double> price_double() const {
+    if (base.is_zero())
+      return {};
+    assert(not base.is_zero()); // TODO: ensure this.
+    return double(quote.E8()) / double(base.E8());
   }
   auto price() const {
     return PriceRelative::from_fraction(quote.E8(), base.E8());
@@ -119,7 +132,11 @@ class BuySellOrders {
   class MatchResult {
   public:
     MatchResult(MatchResult_uint64 mr) : mr(std::move(mr)) {}
-    Delta to_pool() const { return mr.toPool; }
+    std::optional<Delta> to_pool() const {
+      if (mr.toPool)
+        return Delta(*mr.toPool);
+      return {};
+    }
     std::optional<Delta> not_filled() const {
       if (mr.notFilled)
         return Delta(*mr.notFilled);

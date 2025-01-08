@@ -2,7 +2,6 @@
 #include "funds.hpp"
 #include "nlohmann/json.hpp"
 #include <emscripten.h>
-#include <iostream>
 #include <stdio.h>
 using namespace std;
 
@@ -49,11 +48,6 @@ json match_result() {
   }
   json sells(json::array());
   auto J{bso.base_asc_sell().size()};
-  cout << "match_res.baseBound" << match_res.base_bound() << endl;
-  if (nf) {
-    cout << "match_res.notFilled->amount" << nf->amount().to_string() << endl;
-    ;
-  }
   for (size_t j = 0; j < J; ++j) {
     bool matched{j < match_res.base_bound()};
     auto order{bso.base_asc_sell()[j]};
@@ -70,31 +64,68 @@ json match_result() {
   }
   std::reverse(sells.begin(), sells.end());
 
-  const auto &toPool{match_res.to_pool()};
-  auto poolSwapped{[&]() {
-    if (toPool.is_quote())
-      return pTmp.buy(toPool.amount(), 0);
-    else
-      return pTmp.sell(toPool.amount(), 0);
-  }()};
-  auto matched{match_res.filled().diff_throw(match_res.to_pool())};
+  auto json_price{[](const defi::BaseQuote &bq) -> json {
+    if (auto o{bq.price_double()})
+      return json(*o);
+    return json(nullptr);
+  }};
 
-  return {{"parseErrors", errors},
-          {"match",
-           {{"buys", buys},
-            {"sells", sells},
-            {"poolBefore", pool_json(p)},
-            {"toPool",
-             {{"isQuote", toPool.is_quote()},
-              {"in", toPool.amount().to_string()},
-              {"out", poolSwapped.to_string()}}},
-            {"filled",
-             {{"base", match_res.filled().base.to_string()},
-              {"quote", match_res.filled().quote.to_string()}}},
-            {"matched",
-             {{"base", matched.base.to_string()},
-              {"quote", matched.quote.to_string()}}},
-            {"poolAfter", pool_json(pTmp)}}}};
+  const auto &toPool{match_res.to_pool()};
+  auto poolBaseQuote{[&]() -> defi::BaseQuote {
+        if (toPool) {
+            if (toPool->is_quote()) 
+                return {pTmp.buy(toPool->amount(), 0),toPool->amount()};
+            else {
+                return {toPool->amount(),pTmp.sell(toPool->amount(), 0),};
+            }
+        }
+        return {};
+  }()};
+
+  auto matched{match_res.filled()};
+  if (match_res.to_pool())
+    matched.subtract_throw(*match_res.to_pool());
+  auto toPoolJson = [&]() -> json {
+    if (toPool) {
+      return {{"isQuote", toPool->is_quote()},
+              {"base", poolBaseQuote.base.to_string()},
+              {"quote", poolBaseQuote.quote.to_string()},
+              {"price", json_price(poolBaseQuote)}};
+    };
+    return nullptr;
+  };
+  defi::BaseQuote filledBuyer{matched};
+  defi::BaseQuote filledSeller{matched};
+  if (toPool) {
+    if (toPool->is_quote()) {
+      filledBuyer.add_throw(poolBaseQuote);
+    } else {
+      filledSeller.add_throw(poolBaseQuote);
+    }
+  }
+
+
+  return json{{"parseErrors", errors},
+              {"match",
+               {{"buys", buys},
+                {"sells", sells},
+                {"poolBefore", pool_json(p)},
+                {"toPool", toPoolJson()},
+                {"filled",
+                 {{"outBaseSeller", filledSeller.base.to_string()},
+                  {"inQuoteSeller", filledSeller.quote.to_string()},
+                  {"priceSeller", json_price(filledSeller)},
+                  {"indexBoundSeller", match_res.base_bound()},
+                  {"outQuoteBuyer", filledBuyer.quote.to_string()},
+                  {"inBaseBuyer", filledBuyer.base.to_string()},
+                  {"priceBuyer", json_price(filledBuyer)},
+                  {"indexBoundBuyer", match_res.quote_bound()}}},
+                {"matched",
+                 {{"base", matched.base.to_string()},
+                  {"quote", matched.quote.to_string()},
+                  {"price", matched.quote.is_zero() ? json(nullptr)
+                                                    : json_price(matched)}}},
+                {"poolAfter", pool_json(pTmp)}}}};
 }
 
 template <typename callable>

@@ -34,13 +34,13 @@ inline BaseQuote_uint64 Delta_uint64::base_quote() const {
 }
 
 struct FillResult_uint64 {
-  Delta_uint64 toPool;
+  std::optional<Delta_uint64> toPool;
   std::optional<Delta_uint64> notFilled;
   BaseQuote_uint64 filled;
 };
 struct MatchResult_uint64 : public FillResult_uint64 {
-  size_t quoteBound;
   size_t baseBound;
+  size_t quoteBound;
 };
 
 class Evaluator {

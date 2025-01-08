@@ -12,12 +12,6 @@
               console.log("runtime initialized")
           }
         }
-        function addBuy() {
-        // console.log("Click")
-        // Module._sayHi(); // direct calling works
-        // Module.ccall("sayHi"); // using ccall etc. also work
-        // console.log(Module._daysInWeek()); // values can be returned, etc.
-}
     </script>
     <script type="module">
         import initModule from "./demo.js";
@@ -42,16 +36,13 @@
             return !poolToken && !poolWart; // true if both don't have parse errors
         }
         function updateData(res){
-            console.log(res);
             if (res["error"] != null){
                 alert("Error" + res["error"]);
                 return;
             }
-        
             if (!annotate_parse_errors(res.parseErrors))
                 return; // cannot evaluate if there are parse errors
             const match = res.match;
-            console.log(match);
             var buys = match.buys
             var tbodyBuy = document.getElementById("tbodyBuy")
             tbodyBuy.innerHTML=""
@@ -70,25 +61,24 @@
             document.getElementById("afterWart").innerHTML = match.poolAfter.quote;
             document.getElementById("afterPrice").innerHTML = match.poolAfter.price;
 
+            const toPool = match.toPool;
+            const filled = match.filled;
+
             var tbodyBuyers = document.getElementById("tbodyBuyers")
             tbodyBuyers.innerHTML=""
-            insertRow(tbodyBuyers,["via orders",match.matched.quote, match.matched.base, price(match.matched.base, match.matched.quote)]);
-            if (match.toPool.isQuote){
-                insertRow(tbodyBuyers,["via pool",match.toPool.in, match.toPool.out, price(match.toPool.out, match.toPool.in)]);
-                var totalQuote = match.matched.quote + match.toPool.in;
-                var totalBase = match.matched.base + match.toPool.out;
-                insertRow(tbodyBuyers,["total",totalQuote, totalBase, price(totalBase, totalQuote)]);
+            insertRow(tbodyBuyers,["orders",match.matched.quote, match.matched.base, match.matched.price]);
+            if (toPool && toPool.isQuote){
+                insertRow(tbodyBuyers,["via pool",toPool.quote, toPool.base, toPool.price]);
             }
+            insertRow(tbodyBuyers,["total",filled.outQuoteBuyer, filled.inBaseBuyer, match.filled.priceBuyer]);
 
             var tbodySellers = document.getElementById("tbodySellers")
             tbodySellers.innerHTML=""
-            insertRow(tbodySellers,["orders",match.matched.base, match.matched.quote, price(match.matched.base, match.matched.quote)]);
-            if (!match.toPool.isQuote){
-                insertRow(tbodySellers,["via pool",match.toPool.in, match.toPool.out, price(match.toPool.in, match.toPool.out)]);
-                var totalBase = match.matched.base + match.toPool.in;
-                var totalQuote = match.matched.quote + match.toPool.out;
-                insertRow(tbodySellers,["total",totalBase, totalQuote, price(totalBase, totalQuote)]);
+            insertRow(tbodySellers,["orders", match.matched.base, match.matched.quote, match.matched.price]);
+            if (toPool && !toPool.isQuote){
+                insertRow(tbodySellers,["via pool", toPool.base, toPool.quote, toPool.price]);
             }
+            insertRow(tbodySellers,["total",filled.outBaseSeller, filled.inQuoteSeller, filled.priceSeller]);
 
 
 
@@ -99,6 +89,7 @@
                price: document.getElementById("sellPrice").value,
                amount: document.getElementById("tokenAmount").value
             });
+            editPool();
             var res = JSON.parse(Module.ccall("addSell","string",["string"],[str]))
             console.log(res);
             updateData(res);
@@ -108,6 +99,7 @@
                price: document.getElementById("buyPrice").value,
                amount: document.getElementById("wartAmount").value
             });
+            editPool();
             var res = JSON.parse(Module.ccall("addBuy","string",["string"],[str]));
             console.log(res);
             updateData(res);
@@ -117,7 +109,6 @@
                token: document.getElementById("beforeToken").value,
                wart: document.getElementById("beforeWart").value
             });
-            console.log(str);
             var res = JSON.parse(Module.ccall("editPool","string",["string"],[str]))
             console.log(res);
             updateData(res);
@@ -141,7 +132,7 @@
                     <tbody id="tbodySell">
                     </tbody>
                 </table>
-                <label for="sellPrice">Limit price (WART/TOKEN):</label>
+                <label for="sellPrice">Limit price (TOKEN/WART):</label>
                 <input type="text" id="sellPrice" name="sellPrice" value="1.0"><br><br>
                 <label for="tokenAmount">Amount (TOKEN):</label>
                 <input type="text" id="tokenAmount" name="tokenAmount"><br><br>
@@ -160,7 +151,7 @@
                     <tbody id="tbodyBuy">
                     </tbody>
                 </table>
-                <label for="buyPrice">Limit price (WART/TOKEN):</label>
+                <label for="buyPrice">Limit price (TOKEN/WART):</label>
                 <input type="text" id="buyPrice" name="buyPrice" value="1.0"><br><br>
                 <label for="wartAmount">Amount (WART):</label>
                 <input type="text" id="wartAmount" name="wartAmount"><br><br>
@@ -194,7 +185,7 @@
                 </table>
             </div>
             <div>
-                <h2>Buyers:</h2>
+                <h2>Buyer Swaps:</h2>
                 <table>
                     <thead>
                         <tr>
@@ -209,7 +200,7 @@
                 </table>
             </div>
             <div>
-                <h2>Sellers:</h2>
+                <h2>Seller Swaps:</h2>
                 <table>
                     <thead>
                         <tr>

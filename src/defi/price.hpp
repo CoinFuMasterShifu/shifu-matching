@@ -116,6 +116,7 @@ struct PriceRelative { // gives details relative to price grid
     if (numerator == 0) {
       assert(denominator !=
              0); // TODO: ensure this, i.e. numerator !=0 || denominator != 0
+            // TODO: don't assert but throw
       return PriceRelative{Price::zero(), true};
     } else if (denominator == 0)
       return PriceRelative{Price::max(), false};

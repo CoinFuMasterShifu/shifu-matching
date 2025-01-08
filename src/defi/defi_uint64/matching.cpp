@@ -32,7 +32,7 @@ public:
     return needsIncrease;
   };
 
-  FillResult_uint64 bisect_dynamic_price() {
+  MatchResult_uint64 bisect_dynamic_price(size_t baseBound, size_t quoteBound) {
     auto bisect = [](Evaluator::ret_t::Fill64Ratio ratio0, uint64_t v1,
                      auto asc_fun) {
       using ret_t = Evaluator::ret_t;
@@ -61,24 +61,33 @@ public:
     };
     auto baseRet{rel_base_asc(0)};
     auto quoteRet{rel_quote_asc(0)};
+    auto make_toPool = [&](bool isQuote,
+                           uint64_t toPool) -> std::optional<Delta_uint64> {
+      if (toPool == 0)
+        return {};
+      return Delta_uint64{isQuote, toPool};
+    };
     if (baseRet.rel == std::strong_ordering::greater) {
       // need to push quote to pool
       assert(quoteRet.rel != std::strong_ordering::greater); // TODO: verify
-      auto toPool{
+      uint64_t toPoolAmount{
           bisect(quoteRet.get_unexceeded_ratio(), in.quote,
                  [&](uint64_t toPool) { return rel_quote_asc(toPool); })};
-      return {{true, toPool}, {}, in};
+      auto toPool{make_toPool(true, toPoolAmount)};
+      return {{toPool, {}, in}, baseBound, quoteBound + toPool.has_value()};
     } else {
       assert(baseRet.rel != std::strong_ordering::greater); // TODO: verify
       // need to push base to pool
-      auto toPool{
+      auto toPoolAmount{
           bisect(baseRet.get_unexceeded_ratio(), in.base,
                  [&](uint64_t toPool) { return rel_base_asc(toPool); })};
-      return {{false, toPool}, {}, in};
+      auto toPool{make_toPool(false, toPoolAmount)};
+      return {{toPool, {}, in}, baseBound + toPool.has_value(), quoteBound};
     }
   }
-  FillResult_uint64 bisect_fixed_price(const bool isQuoteOrder, const uint64_t order0,
-                                const uint64_t order1, Price p) {
+  FillResult_uint64 bisect_fixed_price(const bool isQuoteOrder,
+                                       const uint64_t order0,
+                                       const uint64_t order1, Price p) {
     auto v0{order0};
     auto v1{order1};
     auto &v{isQuoteOrder ? in.quote : in.base};
@@ -90,14 +99,21 @@ public:
         v1 = v;
     }
 
-    v = (toPool0.isQuote? v0 : v1);
-    auto toPool{toPool0.isQuote? toPool0 : toPool1};
+    v = (toPool0.isQuote ? v0 : v1);
+    auto toPool{[&]() -> std::optional<Delta_uint64> {
+      auto &ref{toPool0.isQuote ? toPool0 : toPool1};
+      if (ref.amount == 0)
+        return {};
+      return ref;
+    }()};
+
     auto nf{std::max(order0, order1) - v};
     std::optional<Delta_uint64> notFilled;
-    if (nf>0) {
-        notFilled = Delta_uint64{isQuoteOrder, nf};
+    if (nf > 0) {
+      notFilled = Delta_uint64{isQuoteOrder, nf};
     }
-    auto filled{isQuoteOrder ?BaseQuote_uint64{in.base,v}: BaseQuote_uint64{v,in.quote} };
+    auto filled{isQuoteOrder ? BaseQuote_uint64{in.base, v}
+                             : BaseQuote_uint64{v, in.quote}};
 
     return {.toPool{toPool}, .notFilled{notFilled}, .filled{filled}};
   };
@@ -133,17 +149,17 @@ auto BuySellOrders_uint64::match(Pool_uint64 &p) -> MatchResult_uint64 {
         j1 = j;
     }
     if (j1 == 0) {
-      return {m.bisect_dynamic_price(), i1, J - j1};
+      return m.bisect_dynamic_price(J - j1, i1);
     } else {
       auto j{j1 - 1};
       m.in.base = extraBase[j].cumsum - pushBaseAsc[J - 1 - j].amount;
       auto price{pushBaseAsc[J - 1 - j].limit};
       if (m.needs_increase(price)) {
-        return {m.bisect_dynamic_price(), i1, J - j1};
+        return m.bisect_dynamic_price(J - j1, i1);
       } else {
         return {
             m.bisect_fixed_price(false, extraBase[j].cumsum, m.in.base, price),
-            i1, J - j1};
+            J - j1, i1};
       }
     }
   };
@@ -164,8 +180,8 @@ auto BuySellOrders_uint64::match(Pool_uint64 &p) -> MatchResult_uint64 {
       size_t j1 = (i1 < I ? extraQuote[i1].upperBoundCounterpart : J);
       return bisect_j(j0, j1);
     } else {
-      return {m.bisect_fixed_price(true, eq.cumsum, m.in.quote, price), i,
-              J - j0};
+      return {m.bisect_fixed_price(true, eq.cumsum, m.in.quote, price), J - j0,
+              i};
     }
   }
 }
