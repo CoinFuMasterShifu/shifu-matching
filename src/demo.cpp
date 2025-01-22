@@ -39,7 +39,7 @@ json match_result() {
     if (matched) {
       filled = elem.amount();
     }
-    if (i == match_res.quote_bound() && nf && nf->is_quote()) {
+    if (i == match_res.quote_bound() && nf && !nf->is_quote()) {
       filled = Funds::diff_throw(elem.amount(), nf->amount());
     }
     buys.push_back({{"amount", elem.amount().to_string()},
@@ -55,7 +55,7 @@ json match_result() {
     if (matched) {
       filled = order.amount();
     }
-    if (j == match_res.base_bound() && nf && !nf->is_base()) {
+    if (j == match_res.base_bound() && nf && nf->is_base()) {
       filled = Funds::diff_throw(order.amount(), nf->amount());
     }
     sells.push_back({{"amount", order.amount().to_string()},
@@ -72,14 +72,17 @@ json match_result() {
 
   const auto &toPool{match_res.to_pool()};
   auto poolBaseQuote{[&]() -> defi::BaseQuote {
-        if (toPool) {
-            if (toPool->is_quote()) 
-                return {pTmp.buy(toPool->amount(), 0),toPool->amount()};
-            else {
-                return {toPool->amount(),pTmp.sell(toPool->amount(), 0),};
-            }
-        }
-        return {};
+    if (toPool) {
+      if (toPool->is_quote())
+        return {pTmp.buy(toPool->amount(), 0), toPool->amount()};
+      else {
+        return {
+            toPool->amount(),
+            pTmp.sell(toPool->amount(), 0),
+        };
+      }
+    }
+    return {};
   }()};
 
   auto matched{match_res.filled()};
@@ -103,7 +106,6 @@ json match_result() {
       filledSeller.add_throw(poolBaseQuote);
     }
   }
-
 
   return json{{"parseErrors", errors},
               {"match",
