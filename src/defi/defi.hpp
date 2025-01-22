@@ -37,10 +37,10 @@ public:
   }
   auto price() const { return pool_uint64.price(); }
 
-  [[nodiscard]] Funds sell(Funds baseAdd, uint64_t feeE4 = 10) {
+  Funds sell(Funds baseAdd, uint64_t feeE4 = 10) {
     return Funds::from_value_throw(pool_uint64.sell(baseAdd.E8(), feeE4));
   }
-  [[nodiscard]] Funds buy(Funds quoteAdd, uint64_t feeE4 = 10) {
+  Funds buy(Funds quoteAdd, uint64_t feeE4 = 10) {
     return Funds::from_value_throw(pool_uint64.buy(quoteAdd.E8(), feeE4));
   }
 
@@ -79,6 +79,9 @@ struct BaseQuote {
   BaseQuote() : BaseQuote(Funds::zero(), Funds::zero()) {}
   Funds base;
   Funds quote;
+  BaseQuote operator-(const BaseQuote &other) {
+    return {base.subtract_throw(other.base), quote.subtract_throw(other.quote)};
+  }
   BaseQuote &add_throw(const BaseQuote &bq) {
     base.add_throw(bq.base);
     quote.add_throw(bq.quote);

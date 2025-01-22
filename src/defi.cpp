@@ -1,6 +1,6 @@
 #include "defi/defi.hpp"
 #include <iomanip>
-#include<iostream>
+#include <iostream>
 
 using namespace std;
 using namespace defi;
@@ -41,47 +41,55 @@ void from_fraction() {
 }
 } // namespace test
 
-std::ostream& operator<<(std::ostream& os, const Funds& f){
-    return os<<f.to_string();
+std::ostream &operator<<(std::ostream &os, const Funds &f) {
+  return os << f.to_string();
 }
 void print_match(BuySellOrders &bso, Pool &p) {
   auto res{bso.match(p)};
-    auto tp{res.to_pool()};
-    if (tp) {
-        cout << "to pool: " << tp->amount() << " ("
-            << (tp->is_quote() ? "quote" : "base") << ")\n";
-    }
+  auto tp{res.to_pool()};
+  if (tp) {
+    cout << "to pool: " << tp->amount() << " ("
+         << (tp->is_quote() ? "quote" : "base") << ")\n";
+  }
   cout << "Price: (Pool before): " << p.price().price.to_double() << endl;
-  if (res.to_pool().isQuote) {
-    p.buy(res.to_pool().amount);
-  } else {
-    p.sell(res.to_pool().amount);
+  if (tp) {
+    if (tp->is_quote()) {
+      p.buy(tp->amount());
+    } else {
+      p.sell(tp->amount());
+    }
   }
   cout << "Price (Pool after):  " << p.price().price.to_double() << endl;
-  auto &nf{res.notFilled};
+  auto nf{res.not_filled()};
   if (nf) {
-      cout << "Not filled: " << nf->amount << " (" << (nf->isQuote ? "quote" : "base")
-          << ")" << endl;
+    cout << "Not filled: " << nf->amount() << " ("
+         << (nf->is_quote() ? "quote" : "base") << ")" << endl;
   }
-  auto matched{res.filled - res.to_pool()};
-  if (matched.base!= 0 ) {
-      cout << "Price (matched):     " << matched.price().price.to_double() << endl;
+  auto matched{tp ? res.filled() - tp->base_quote() : res.filled()};
+  if (!matched.base.is_zero()) {
+    cout << "Price (matched):     " << matched.price().price.to_double()
+         << endl;
   }
   cout << "matched (base/quote): (" << matched.base << "/" << matched.quote
        << ")" << endl;
-  cout << "filled (base/quote):  (" << res.filled.base << "/"
-       << res.filled.quote << ")" << endl;
+  cout << "filled (base/quote):  (" << res.filled().base << "/"
+       << res.filled().quote << ")" << endl;
 }
 int main() {
   using namespace defi;
-  Pool_uint64 p(1000, 2000);
+  auto coins = [](uint32_t amount) {
+    return Funds::from_value_throw(uint64_t(amount) * 100000000);
+  };
+  Pool p(coins(100), coins(200));
   cout << "Pool " << p.base_total() << " " << p.quote_total() << endl;
-  cout << "Price: " << p.price().price.to_double() << endl;
   BuySellOrders bso;
-  bso.insert_base(Order_uint64(100, Price::from_double(2).value()));
-  bso.insert_base(Order_uint64(100, Price::from_double(1).value()));
-  bso.insert_quote(Order_uint64(200, Price::from_double(10).value()));
-  bso.insert_quote(Order_uint64(100, Price::from_double(2).value()));
-  // bso.insert_quote(Order(301, Price::from_double(30.17).value()));
+  bso.insert_base(
+      Order(coins(100), Price::from_double(1).value()));
+  bso.insert_base(
+      Order(coins(100), Price::from_double(0.5).value()));
+  bso.insert_quote(
+      Order(coins(100), Price::from_double(4).value()));
+  bso.insert_quote(
+      Order(coins(100), Price::from_double(3).value()));
   print_match(bso, p);
 }

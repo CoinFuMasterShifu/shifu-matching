@@ -165,7 +165,7 @@ class BuySellOrders_uint64 {
   void prepare() {
     extraBase.resize(0);
     extraQuote.resize(0);
-    size_t cumsumQuote{0};
+    uint64_t cumsumQuote{0};
     const size_t J{pushBaseAsc.size()};
     const size_t I{pushQuoteDesc.size()};
     uint64_t cumsumBase{pushBaseAsc.total_push()};
@@ -191,6 +191,7 @@ class BuySellOrders_uint64 {
 
 public:
   [[nodiscard]] MatchResult_uint64 match(Pool_uint64 &p);
+  [[nodiscard]] MatchResult_uint64 match_internal(Pool_uint64 &p);
   auto insert_base(Order_uint64 o) {
     pushBaseAsc.insert_asc(elem_t{o});
     prepare();

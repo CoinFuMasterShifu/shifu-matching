@@ -121,7 +121,8 @@ public:
   Delta_uint64 toPool0;
   Delta_uint64 toPool1;
 };
-auto BuySellOrders_uint64::match(Pool_uint64 &p) -> MatchResult_uint64 {
+auto BuySellOrders_uint64::match(Pool_uint64 &p)
+    -> MatchResult_uint64 {
   const size_t I{pushQuoteDesc.size()};
   const size_t J{pushBaseAsc.size()};
   size_t i0{0};
