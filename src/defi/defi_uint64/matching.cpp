@@ -74,7 +74,7 @@ public:
           bisect(quoteRet.get_unexceeded_ratio(), in.quote,
                  [&](uint64_t toPool) { return rel_quote_asc(toPool); })};
       auto toPool{make_toPool(true, toPoolAmount)};
-      return {{toPool, {}, in}, baseBound, quoteBound + toPool.has_value()};
+      return {{toPool, {}, in}, baseBound, quoteBound};
     } else {
       assert(baseRet.rel != std::strong_ordering::greater); // TODO: verify
       // need to push base to pool
@@ -82,7 +82,7 @@ public:
           bisect(baseRet.get_unexceeded_ratio(), in.base,
                  [&](uint64_t toPool) { return rel_base_asc(toPool); })};
       auto toPool{make_toPool(false, toPoolAmount)};
-      return {{toPool, {}, in}, baseBound + toPool.has_value(), quoteBound};
+      return {{toPool, {}, in}, baseBound, quoteBound};
     }
   }
   FillResult_uint64 bisect_fixed_price(const bool isQuoteOrder,

@@ -1,5 +1,4 @@
-#include "pool.hpp"
-#include "matching.hpp"
+#include "defi/defi.hpp"
 #include <iomanip>
 #include<iostream>
 
@@ -42,15 +41,21 @@ void from_fraction() {
 }
 } // namespace test
 
-void print_match(BuySellOrders &bso, Pool_uint64 &p) {
+std::ostream& operator<<(std::ostream& os, const Funds& f){
+    return os<<f.to_string();
+}
+void print_match(BuySellOrders &bso, Pool &p) {
   auto res{bso.match(p)};
-  cout << "to pool: " << res.toPool.amount << " ("
-       << (res.toPool.isQuote ? "quote" : "base") << ")\n";
+    auto tp{res.to_pool()};
+    if (tp) {
+        cout << "to pool: " << tp->amount() << " ("
+            << (tp->is_quote() ? "quote" : "base") << ")\n";
+    }
   cout << "Price: (Pool before): " << p.price().price.to_double() << endl;
-  if (res.toPool.isQuote) {
-    p.buy(res.toPool.amount);
+  if (res.to_pool().isQuote) {
+    p.buy(res.to_pool().amount);
   } else {
-    p.sell(res.toPool.amount);
+    p.sell(res.to_pool().amount);
   }
   cout << "Price (Pool after):  " << p.price().price.to_double() << endl;
   auto &nf{res.notFilled};
@@ -58,7 +63,7 @@ void print_match(BuySellOrders &bso, Pool_uint64 &p) {
       cout << "Not filled: " << nf->amount << " (" << (nf->isQuote ? "quote" : "base")
           << ")" << endl;
   }
-  auto matched{res.filled - res.toPool};
+  auto matched{res.filled - res.to_pool()};
   if (matched.base!= 0 ) {
       cout << "Price (matched):     " << matched.price().price.to_double() << endl;
   }

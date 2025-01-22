@@ -30,34 +30,25 @@ json match_result() {
   const defi::Pool p{*poolToken, *poolWart};
   auto pTmp{p};
   auto match_res{bso.match(pTmp)};
-  const auto nf{match_res.not_filled()};
   json buys(json::array());
+
+  auto fquote{match_res.filled().quote};
   for (size_t i = 0; i < bso.quote_desc_buy().size(); ++i) {
-    bool matched{i < match_res.quote_bound()};
     auto elem{bso.quote_desc_buy()[i]};
-    Funds filled{Funds::zero()};
-    if (matched) {
-      filled = elem.amount();
-    }
-    if (i == match_res.quote_bound() && nf && !nf->is_quote()) {
-      filled = Funds::diff_throw(elem.amount(), nf->amount());
-    }
+    Funds filled{std::min(elem.amount(), fquote)};
+    fquote -= filled;
     buys.push_back({{"amount", elem.amount().to_string()},
                     {"filled", filled.to_string()},
                     {"limit", elem.limit().to_double()}});
   }
   json sells(json::array());
   auto J{bso.base_asc_sell().size()};
+
+  auto fbase{match_res.filled().base};
   for (size_t j = 0; j < J; ++j) {
-    bool matched{j < match_res.base_bound()};
     auto order{bso.base_asc_sell()[j]};
-    Funds filled{Funds::zero()};
-    if (matched) {
-      filled = order.amount();
-    }
-    if (j == match_res.base_bound() && nf && nf->is_base()) {
-      filled = Funds::diff_throw(order.amount(), nf->amount());
-    }
+    Funds filled{std::min(fbase, order.amount())};
+    fbase -= filled;
     sells.push_back({{"amount", order.amount().to_string()},
                      {"filled", filled.to_string()},
                      {"limit", order.limit().to_double()}});

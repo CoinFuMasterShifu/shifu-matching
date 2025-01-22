@@ -28,34 +28,35 @@ class Pool {
   };
 
 public:
-  Pool(Funds base, Funds quote) : pool_uin64(base.E8(), quote.E8()) {}
+  Pool(Funds base, Funds quote) : pool_uint64(base.E8(), quote.E8()) {}
   Funds base_total() const {
-    return Funds::from_value_throw(pool_uin64.base_total());
+    return Funds::from_value_throw(pool_uint64.base_total());
   }
   Funds quote_total() const {
-    return Funds::from_value_throw(pool_uin64.quote_total());
+    return Funds::from_value_throw(pool_uint64.quote_total());
   }
+  auto price() const { return pool_uint64.price(); }
 
   [[nodiscard]] Funds sell(Funds baseAdd, uint64_t feeE4 = 10) {
-    return Funds::from_value_throw(pool_uin64.sell(baseAdd.E8(), feeE4));
+    return Funds::from_value_throw(pool_uint64.sell(baseAdd.E8(), feeE4));
   }
   [[nodiscard]] Funds buy(Funds quoteAdd, uint64_t feeE4 = 10) {
-    return Funds::from_value_throw(pool_uin64.buy(quoteAdd.E8(), feeE4));
+    return Funds::from_value_throw(pool_uint64.buy(quoteAdd.E8(), feeE4));
   }
 
   BuyResult apply(BuyTx tx) {
     return {.payQuote = tx.sellQuote,
             .receiveBase =
-                Funds::from_value_throw(pool_uin64.buy(tx.sellQuote.E8()))};
+                Funds::from_value_throw(pool_uint64.buy(tx.sellQuote.E8()))};
   }
   SellResult apply(SellTx tx) {
     return {.payBase = tx.sellBase,
             .receiveQuote =
-                Funds::from_value_throw(pool_uin64.sell(tx.sellBase.E8()))};
+                Funds::from_value_throw(pool_uint64.sell(tx.sellBase.E8()))};
   }
 
 private:
-  Pool_uint64 pool_uin64;
+  Pool_uint64 pool_uint64;
 };
 
 struct BaseQuote;
@@ -152,7 +153,7 @@ class BuySellOrders {
 
 public:
   [[nodiscard]] MatchResult match(Pool &p) {
-    return buySellOrders_uint64.match(p.pool_uin64);
+    return buySellOrders_uint64.match(p.pool_uint64);
   }
   auto insert_base(Order o) {
     return buySellOrders_uint64.insert_base(

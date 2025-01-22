@@ -11,7 +11,7 @@ public:
     uint64_t val;
   };
 
-  PriceRelative price() {
+  PriceRelative price() const {
     return PriceRelative::from_fraction(quoteTotal, baseTotal);
   }
 
