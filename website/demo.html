@@ -24,6 +24,20 @@
                 row.insertCell(i).innerText = rowarr[i];
             }
         }
+        function insertOrderbookEntry(obj,base,rowarr){
+            var row = obj.insertRow(-1);
+            var firstCell = row.insertCell(0);
+            var btn = document.createElement('button');
+            const rowIndex = row.rowIndex;
+            btn.innerHTML = rowIndex;
+            btn.onclick = function(){
+                deleteOrder(base,rowIndex - 1);
+            };
+            firstCell.appendChild(btn);
+            for (var i=0; i<rowarr.length; ++i){
+                row.insertCell(i + 1).innerText = rowarr[i];
+            }
+        }
         function price(base,quote){
             if (base != 0){
                 return quote/base;
@@ -47,13 +61,13 @@
             var tbodyBuy = document.getElementById("tbodyBuy")
             tbodyBuy.innerHTML=""
             for (var i=0, len = buys.length; i<len; i++){
-                insertRow(tbodyBuy,[buys[i]["amount"],buys[i]["filled"],buys[i]["limit"]]);
+                insertOrderbookEntry(tbodyBuy, false, [buys[i]["amount"],buys[i]["filled"],buys[i]["limit"]]);
             }
             var sells = match.sells
             var tbodySell = document.getElementById("tbodySell")
             tbodySell.innerHTML=""
             for (var i=0, len = sells.length; i<len; i++){
-                insertRow(tbodySell,[sells[i]["amount"],sells[i]["filled"],sells[i]["limit"]]);
+                insertOrderbookEntry(tbodySell,true, [sells[i]["amount"],sells[i]["filled"],sells[i]["limit"]]);
             }
             var tbodyPool = document.getElementById("tbodyPool")
             document.getElementById("beforePrice").innerHTML = match.poolBefore.price;
@@ -79,10 +93,6 @@
                 insertRow(tbodySellers,["via pool", toPool.base, toPool.quote, toPool.price]);
             }
             insertRow(tbodySellers,["total",filled.outBaseSeller, filled.inQuoteSeller, filled.priceSeller]);
-
-
-
-
         }
         function addSell() {
             var str = JSON.stringify({
@@ -113,6 +123,15 @@
             console.log(res);
             updateData(res);
         }
+        function deleteOrder(base, index){
+            var str = JSON.stringify({
+               base: base,
+               index: index
+            });
+            var res = JSON.parse(Module.ccall("deleteOrder","string",["string"],[str]))
+            console.log(res);
+            updateData(res);
+        }
     </script>
 
     <body>
@@ -124,6 +143,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th></th>
                             <th>AMOUNT</th>
                             <th>FILLED</th>
                             <th>LIMIT</th>
@@ -143,6 +163,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th></th>
                             <th>AMOUNT</th>
                             <th>FILLED</th>
                             <th>LIMIT</th>

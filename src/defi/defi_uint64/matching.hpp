@@ -131,8 +131,16 @@ struct elem_t : public Order_uint64 {
 struct Ordervec : protected std::vector<elem_t> {
   using parent_t = std::vector<elem_t>;
   Ordervec() {}
+  using parent_t::erase;
   using parent_t::size;
   using parent_t::operator[];
+  bool delete_at(size_t i) {
+    if (i < size()) {
+      erase(begin() + i);
+      return true;
+    }
+    return false;
+  }
   void insert_desc(ordervec::elem_t o) {
     auto iter{std::lower_bound(rbegin(), rend(), o)};
     if (iter != rend() && *iter == o)
@@ -199,6 +207,21 @@ public:
   auto insert_quote(Order_uint64 o) {
     pushQuoteDesc.insert_desc(elem_t{o});
     prepare();
+  }
+  bool delete_quote(size_t i) {
+    if (pushQuoteDesc.delete_at(i)) {
+      prepare();
+      return true;
+    }
+    return false;
+  }
+
+  bool delete_base(size_t i) {
+    if (pushBaseAsc.delete_at(pushBaseAsc.size() - 1 - i)) {
+      prepare();
+      return true;
+    }
+    return false;
   }
   auto &quote_desc_buy() const { return pushQuoteDesc; }
   auto &base_asc_sell() const { return pushBaseAsc; }

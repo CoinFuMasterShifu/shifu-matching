@@ -169,6 +169,16 @@ json edit_pool(json j) {
   return match_result();
 }
 
+json delete_order(json j) {
+  try {
+    bool base = j["base"].get<bool>();
+    auto i = j["index"].get<size_t>();
+    bso.delete_index(base, i);
+  } catch (...) {
+  }
+  return match_result();
+}
+
 json add_buy(json j) {
   auto order{parse_order(j)};
   bso.insert_quote(order);
@@ -190,4 +200,7 @@ const char *addSell(const char *json) { return wrap_fun(add_sell, json); }
 
 EMSCRIPTEN_KEEPALIVE
 const char *editPool(const char *json) { return wrap_fun(edit_pool, json); }
+
+EMSCRIPTEN_KEEPALIVE
+const char *deleteOrder(const char* json) { return wrap_fun(delete_order, json); }
 }

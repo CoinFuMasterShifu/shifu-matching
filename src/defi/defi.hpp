@@ -166,6 +166,11 @@ public:
     return buySellOrders_uint64.insert_quote(
         {.amount = o.amount.E8(), .limit{o.limit}});
   }
+  bool delete_index(bool base, size_t i) {
+    if (base)
+      return buySellOrders_uint64.delete_base(i);
+    return buySellOrders_uint64.delete_quote(i);
+  }
   OrderVecView quote_desc_buy() const {
     return buySellOrders_uint64.quote_desc_buy();
   }
