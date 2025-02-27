@@ -132,17 +132,12 @@ class Matcher : public Evaluator {
 public:
     Matcher(uint64_t totalBasePush, uint64_t totalQuotePush, Pool_uint64& p)
         : Evaluator(p.base_total(), 0, p.quote_total(), 0)
-        , // TODO: initialize with pool
-        toPool0 { false, totalBasePush }
+        , toPool0 { false, totalBasePush } // TODO: initialize with pool
         , toPool1 { true, totalQuotePush }
     {
     }
     Delta_uint64 order_excess(Price p) const
     {
-        struct MatchResult_uint64 : public FillResult_uint64 {
-            size_t baseBound;
-            size_t quoteBound;
-        };
         if (quoteIntoPool1 == true) {
             auto q { multiply_floor(in.base, p) };
             if (q.has_value() && *q <= in.quote) // too much base
@@ -156,15 +151,15 @@ public:
     }
     bool needs_increase(Price p)
     {
-        Delta_uint64 oe { order_excess(p) };
+        Delta_uint64 toPool { order_excess(p) };
         bool needsIncrease {
-            oe.isQuote ? rel_quote_price(oe.amount, p) != std::strong_ordering::greater
-                    : rel_base_price(oe.amount, p) == std::strong_ordering::less
+            toPool.isQuote ? rel_quote_price(toPool.amount, p) != std::strong_ordering::greater
+                           : rel_base_price(toPool.amount, p) == std::strong_ordering::less
         };
         if (needsIncrease)
-            toPool0 = oe;
+            toPool0 = toPool;
         else
-            toPool1 = oe;
+            toPool1 = toPool;
         return needsIncrease;
     };
 
