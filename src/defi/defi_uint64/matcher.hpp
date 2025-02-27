@@ -24,8 +24,38 @@ struct BaseQuote_uint64 {
             res.base -= bq.amount;
         return res;
     }
+    Delta_uint64 excess(Price p) const // computes excess 
+    {
+        auto q { multiply_floor(base, p) };
+        if (q.has_value() && *q <= quote) // too much base
+            return { true, quote - *q };
+        auto b { divide_floor(quote, p) };
+        assert(b.has_value()); // TODO: verify assert by checking precision of
+                               // divide_floor
+        assert(*b <= base);
+        return { false, base - *b };
+    }
     auto price() const { return PriceRelative::from_fraction(quote, base); }
 };
+
+struct PoolLiquidity_uint64 : public BaseQuote_uint64 {
+
+    [[nodiscard]] std::strong_ordering rel_quote_price(uint64_t quoteToPool,
+        Price p) const
+    {
+        return compare_fraction(
+            Prod128(quote + quoteToPool, quote + quoteToPool),
+            Prod128(base, quote), p);
+    }
+    [[nodiscard]] std::strong_ordering rel_base_price(uint64_t baseToPool,
+        Price p) const
+    {
+        return compare_fraction(
+            Prod128(base, quote),
+            Prod128(base + baseToPool, base + baseToPool), p);
+    }
+};
+
 inline BaseQuote_uint64 Delta_uint64::base_quote() const
 {
     if (isQuote)
@@ -58,7 +88,7 @@ public:
     }
 
     BaseQuote_uint64 in;
-    BaseQuote_uint64 pool;
+    PoolLiquidity_uint64 pool;
     struct ret_t {
         std::strong_ordering rel;
         struct Pool128Ratio {
@@ -103,24 +133,10 @@ public:
         return { rel, ret_t::Fill64Ratio { pp2, op2 } };
     }
 
-    [[nodiscard]] std::strong_ordering rel_quote_price(uint64_t quoteToPool,
-        Price p) const
-    {
-        return compare_fraction(
-            Prod128(pool.quote + quoteToPool, pool.quote + quoteToPool),
-            Prod128(pool.base, pool.quote), p);
-    }
-    [[nodiscard]] std::strong_ordering rel_base_price(uint64_t baseToPool,
-        Price p) const
-    {
-        return compare_fraction(
-            Prod128(pool.base, pool.quote),
-            Prod128(pool.base + baseToPool, pool.base + baseToPool), p);
-    }
-    [[nodiscard]] Prod192 quotedelta_quadratic_asc(uint64_t quoteDelta) const
-    {
-        return Prod128(pool.quote + quoteDelta, pool.quote + quoteDelta) * in.base;
-    }
+    // [[nodiscard]] Prod192 quotedelta_quadratic_asc(uint64_t quoteDelta) const
+    // {
+    //     return Prod128(pool.quote + quoteDelta, pool.quote + quoteDelta) * in.base;
+    // }
 };
 
 struct MatchResult_uint64 : public FillResult_uint64 {
@@ -136,25 +152,12 @@ public:
         , toPool1 { true, totalQuotePush }
     {
     }
-    Delta_uint64 order_excess(Price p) const
-    {
-        if (quoteIntoPool1 == true) {
-            auto q { multiply_floor(in.base, p) };
-            if (q.has_value() && *q <= in.quote) // too much base
-                return { true, in.quote - *q };
-        }
-        auto b { divide_floor(in.quote, p) };
-        assert(b.has_value()); // TODO: verify assert by checking precision of
-                               // divide_floor
-        assert(*b <= in.base);
-        return { false, in.base - *b };
-    }
     bool needs_increase(Price p)
     {
-        Delta_uint64 toPool { order_excess(p) };
+        Delta_uint64 toPool { in.excess(p) };
         bool needsIncrease {
-            toPool.isQuote ? rel_quote_price(toPool.amount, p) != std::strong_ordering::greater
-                           : rel_base_price(toPool.amount, p) == std::strong_ordering::less
+            toPool.isQuote ? pool.rel_quote_price(toPool.amount, p) != std::strong_ordering::greater
+                           : pool.rel_base_price(toPool.amount, p) == std::strong_ordering::less
         };
         if (needsIncrease)
             toPool0 = toPool;
