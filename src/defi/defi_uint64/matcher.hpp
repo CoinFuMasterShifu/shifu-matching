@@ -24,7 +24,7 @@ struct BaseQuote_uint64 {
             res.base -= bq.amount;
         return res;
     }
-    Delta_uint64 excess(Price p) const // computes excess 
+    Delta_uint64 excess(Price p) const // computes excess
     {
         auto q { multiply_floor(base, p) };
         if (q.has_value() && *q <= quote) // too much base
@@ -40,6 +40,7 @@ struct BaseQuote_uint64 {
 
 struct PoolLiquidity_uint64 : public BaseQuote_uint64 {
 
+    // relation of pool price (affected by adding given quoteToPool) to given price
     [[nodiscard]] std::strong_ordering rel_quote_price(uint64_t quoteToPool,
         Price p) const
     {
@@ -47,12 +48,20 @@ struct PoolLiquidity_uint64 : public BaseQuote_uint64 {
             Prod128(quote + quoteToPool, quote + quoteToPool),
             Prod128(base, quote), p);
     }
+    // relation of pool price (affected by pushing given baseToPool) to given price
     [[nodiscard]] std::strong_ordering rel_base_price(uint64_t baseToPool,
         Price p) const
     {
         return compare_fraction(
             Prod128(base, quote),
             Prod128(base + baseToPool, base + baseToPool), p);
+    }
+    [[nodiscard]] bool exceeds_price(const Delta_uint64& toPool, Price p) const
+    {
+        if (toPool.isQuote)
+            return rel_quote_price(toPool.amount, p) == std::strong_ordering::greater;
+        else
+            return rel_base_price(toPool.amount, p) != std::strong_ordering::less;
     }
 };
 
@@ -155,15 +164,13 @@ public:
     bool needs_increase(Price p)
     {
         Delta_uint64 toPool { in.excess(p) };
-        bool needsIncrease {
-            toPool.isQuote ? pool.rel_quote_price(toPool.amount, p) != std::strong_ordering::greater
-                           : pool.rel_base_price(toPool.amount, p) == std::strong_ordering::less
-        };
-        if (needsIncrease)
+        if (!pool.exceeds_price(toPool,p)){
             toPool0 = toPool;
-        else
+            return true;
+        } else{
             toPool1 = toPool;
-        return needsIncrease;
+            return false;
+        }
     };
 
     MatchResult_uint64 bisect_dynamic_price(size_t baseBound, size_t quoteBound)
@@ -231,10 +238,15 @@ public:
         auto& v { isQuoteOrder ? in.quote : in.base };
         while (v1 + 1 != v0 && v0 + 1 != v1) {
             v = (v0 + v1) / 2;
-            if (needs_increase(p))
+
+            Delta_uint64 toPool { in.excess(p) };
+            if (!pool.exceeds_price(toPool,p)){
+                toPool0 = toPool;
                 v0 = v;
-            else
+            } else{
+                toPool1 = toPool;
                 v1 = v;
+            }
         }
 
         v = (toPool0.isQuote ? v0 : v1);
