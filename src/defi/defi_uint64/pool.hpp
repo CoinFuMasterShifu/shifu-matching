@@ -6,12 +6,14 @@ namespace defi {
 class Pool_uint64 {
 public:
   Pool_uint64(uint64_t base, uint64_t quote)
-      : baseTotal(base), quoteTotal(quote) {}
+      : baseTotal(base), quoteTotal(quote) {
+        assert(base!=0 && quote!=0);
+    }
   struct Tokens {
     uint64_t val;
   };
 
-  PriceRelative price() const {
+  [[nodiscard]] PriceRelative price() const {
     return PriceRelative::from_fraction(quoteTotal, baseTotal);
   }
 
