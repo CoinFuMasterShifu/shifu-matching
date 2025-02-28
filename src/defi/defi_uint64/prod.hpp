@@ -181,6 +181,10 @@ protected:
   uint64_t lower;
 };
 
+struct Ratio128 {
+    Prod128 numerator, denominator;
+};
+
 class Prod192 : protected Prod128 {
 public:
   auto operator<=>(const Prod192 &) const = default;

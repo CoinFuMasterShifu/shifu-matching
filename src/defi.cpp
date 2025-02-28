@@ -60,11 +60,6 @@ void print_match(BuySellOrders &bso, Pool &p) {
     }
   }
   cout << "Price (Pool after):  " << p.price().price.to_double() << endl;
-  auto nf{res.not_filled()};
-  if (nf) {
-    cout << "Not filled: " << nf->amount() << " ("
-         << (nf->is_quote() ? "quote" : "base") << ")" << endl;
-  }
   auto matched{tp ? res.filled() - tp->base_quote() : res.filled()};
   if (!matched.base.is_zero()) {
     cout << "Price (matched):     " << matched.price().price.to_double()

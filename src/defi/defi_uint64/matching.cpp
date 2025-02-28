@@ -17,7 +17,7 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
         auto j { eq.upperBoundCounterpart };
         m.in.base = (j == J ? 0 : extraBase[j].cumsum);
         m.in.quote = eq.cumsum;
-        if (m.needs_increase(pushQuoteDesc[i].limit))
+        if (m.bisection_step(pushQuoteDesc[i].limit))
             i0 = i + 1;
         else
             i1 = i;
@@ -26,7 +26,7 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
         while (j0 != j1) {
             auto j { (j0 + j1) / 2 };
             m.in.base = extraBase[j].cumsum;
-            if (m.needs_increase(pushBaseAsc[J - 1 - j].limit))
+            if (m.bisection_step(pushBaseAsc[J - 1 - j].limit))
                 j0 = j + 1;
             else
                 j1 = j;
@@ -37,7 +37,7 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
             auto j { j1 - 1 };
             m.in.base = extraBase[j].cumsum - pushBaseAsc[J - 1 - j].amount;
             auto price { pushBaseAsc[J - 1 - j].limit };
-            if (m.needs_increase(price)) {
+            if (m.bisection_step(price)) {
                 return m.bisect_dynamic_price(J - j1, i1);
             } else {
                 return {
@@ -60,7 +60,7 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
         m.in.base = (j == J ? 0 : extraBase[j].cumsum);
         m.in.quote = eq.cumsum + pushQuoteDesc[i].amount;
         size_t j0 = extraQuote[i].upperBoundCounterpart;
-        if (m.needs_increase(price)) {
+        if (m.bisection_step(price)) {
             size_t j1 = (i1 < I ? extraQuote[i1].upperBoundCounterpart : J);
             return bisect_j(j0, j1);
         } else {

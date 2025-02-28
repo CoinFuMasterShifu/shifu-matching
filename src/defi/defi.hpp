@@ -175,12 +175,6 @@ class BuySellOrders {
                 return Delta(*mr.toPool);
             return {};
         }
-        std::optional<Delta> not_filled() const
-        {
-            if (mr.notFilled)
-                return Delta(*mr.notFilled);
-            return {};
-        }
         BaseQuote filled() const { return mr.filled; }
         size_t quote_bound() { return mr.quoteBound; }
         size_t base_bound() { return mr.baseBound; }
