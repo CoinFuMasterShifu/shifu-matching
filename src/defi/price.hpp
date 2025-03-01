@@ -128,12 +128,12 @@ struct PriceRelative { // gives details relative to price grid
         }
         return rel;
     }
-    [[nodiscard]] static PriceRelative from_fraction(uint64_t numerator,
+    [[nodiscard]] static std::optional<PriceRelative> from_fraction(uint64_t numerator,
         uint64_t denominator)
     { // OK
         if (numerator == 0) {
-            assert(denominator != 0); // TODO: ensure this, i.e. numerator !=0 || denominator != 0
-            // TODO: don't assert but throw
+            if (denominator == 0) 
+                return {}; // no price for degenerate pool (no liquidity at all)
             return PriceRelative { Price::zero(), true };
         } else if (denominator == 0)
             return PriceRelative { Price::max(), false };

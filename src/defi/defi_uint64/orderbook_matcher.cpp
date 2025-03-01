@@ -1,7 +1,8 @@
-#include "matching.hpp"
+#include "orderbook_matcher.hpp"
 #include "pool.hpp"
+
 namespace defi {
-auto BuySellOrders_uint64::match(Pool_uint64& p)
+auto OrderbookMatcher_uint64::match(Pool_uint64& p)
     -> MatchResult_uint64
 {
     const size_t I { pushQuoteDesc.size() };
@@ -32,18 +33,15 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
                 j1 = j;
         }
         if (j1 == 0) {
-            return m.bisect_dynamic_price(J - j1, i1);
+            return m.bisect_dynamic_price();
         } else {
             auto j { j1 - 1 };
             m.in.base = extraBase[j].cumsum - pushBaseAsc[J - 1 - j].amount;
             auto price { pushBaseAsc[J - 1 - j].limit };
             if (m.bisection_step(price)) {
-                return m.bisect_dynamic_price(J - j1, i1);
+                return m.bisect_dynamic_price();
             } else {
-                return {
-                    m.bisect_fixed_price(false, extraBase[j].cumsum, m.in.base, price),
-                    J - j1, i1
-                };
+                return m.bisect_fixed_price(false, extraBase[j].cumsum, m.in.base, price);
             }
         }
     };
@@ -64,8 +62,7 @@ auto BuySellOrders_uint64::match(Pool_uint64& p)
             size_t j1 = (i1 < I ? extraQuote[i1].upperBoundCounterpart : J);
             return bisect_j(j0, j1);
         } else {
-            return { m.bisect_fixed_price(true, eq.cumsum, m.in.quote, price), J - j0,
-                i };
+            return m.bisect_fixed_price(true, eq.cumsum, m.in.quote, price);
         }
     }
 }

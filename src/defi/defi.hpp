@@ -1,6 +1,6 @@
 #pragma once
 #include "../funds.hpp"
-#include "defi_uint64/matching.hpp"
+#include "defi_uint64/orderbook_matcher.hpp"
 #include "defi_uint64/pool.hpp"
 namespace defi {
 
@@ -176,8 +176,6 @@ class BuySellOrders {
             return {};
         }
         BaseQuote filled() const { return mr.filled; }
-        size_t quote_bound() { return mr.quoteBound; }
-        size_t base_bound() { return mr.baseBound; }
 
     private:
         MatchResult_uint64 mr;
@@ -214,7 +212,7 @@ public:
     }
 
 private:
-    BuySellOrders_uint64 buySellOrders_uint64;
+    OrderbookMatcher_uint64 buySellOrders_uint64;
 };
 
 } // namespace defi

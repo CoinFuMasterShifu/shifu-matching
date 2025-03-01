@@ -1,4 +1,5 @@
 #include "matcher.hpp"
+#include<variant>
 
 namespace defi {
 std::optional<Delta_uint64> FilledAndPool::balance_pool_interaction() const

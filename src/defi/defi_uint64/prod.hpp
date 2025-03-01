@@ -195,6 +195,7 @@ public:
       upper = shiftl(upper, lower, s);
       lower = shiftl(lower, lowest, s);
       lowest = lowest << s;
+      break;
     case 1:
       upper = shiftl(lower, lowest, s);
       lower = lowest << s;

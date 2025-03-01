@@ -32,7 +32,7 @@ void from_fraction() {
   auto p{Price::from_double(0.0991).value()};
   cout << std::setprecision(15) << p.to_double() << endl;
   auto print = [](uint64_t a, uint64_t b) {
-    auto pr{PriceRelative::from_fraction(a, b)};
+    auto pr{PriceRelative::from_fraction(a, b).value()};
     cout << a << "/" << b << " in [" << pr.price.to_double() << ", "
          << pr.ceil()->to_double() << "]";
   };
@@ -51,7 +51,7 @@ void print_match(BuySellOrders &bso, Pool &p) {
     cout << "to pool: " << tp->amount() << " ("
          << (tp->is_quote() ? "quote" : "base") << ")\n";
   }
-  cout << "Price: (Pool before): " << p.price().price.to_double() << endl;
+  cout << "Price: (Pool before): " << p.price().value().price.to_double() << endl;
   if (tp) {
     if (tp->is_quote()) {
       p.buy(tp->amount());
@@ -59,10 +59,10 @@ void print_match(BuySellOrders &bso, Pool &p) {
       p.sell(tp->amount());
     }
   }
-  cout << "Price (Pool after):  " << p.price().price.to_double() << endl;
+  cout << "Price (Pool after):  " << p.price().value().price.to_double() << endl;
   auto matched{tp ? res.filled() - tp->base_quote() : res.filled()};
   if (!matched.base.is_zero()) {
-    cout << "Price (matched):     " << matched.price().price.to_double()
+    cout << "Price (matched):     " << matched.price().value().price.to_double()
          << endl;
   }
   cout << "matched (base/quote): (" << matched.base << "/" << matched.quote

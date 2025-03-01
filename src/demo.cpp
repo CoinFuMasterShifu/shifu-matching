@@ -108,11 +108,11 @@ json match_result() {
                  {{"outBaseSeller", filledSeller.base.to_string()},
                   {"inQuoteSeller", filledSeller.quote.to_string()},
                   {"priceSeller", json_price(filledSeller)},
-                  {"indexBoundSeller", match_res.base_bound()},
                   {"outQuoteBuyer", filledBuyer.quote.to_string()},
                   {"inBaseBuyer", filledBuyer.base.to_string()},
                   {"priceBuyer", json_price(filledBuyer)},
-                  {"indexBoundBuyer", match_res.quote_bound()}}},
+                    }
+                },
                 {"matched",
                  {{"base", matched.base.to_string()},
                   {"quote", matched.quote.to_string()},
