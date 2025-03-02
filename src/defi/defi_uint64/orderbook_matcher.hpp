@@ -33,6 +33,19 @@ struct Ordervec : protected std::vector<elem_t> {
         }
         return false;
     }
+    void insert_smallest_desc(ordervec::elem_t o)
+    {
+        if (size() > 0) {
+            if (o.limit == back().limit) {
+                back().amount += o.amount;
+                return;
+            }
+            assert(o.limit < back().limit);
+        }
+        push_back(o);
+        total += o.amount;
+    }
+
     void insert_desc(ordervec::elem_t o)
     {
         auto iter { std::lower_bound(rbegin(), rend(), o) };
@@ -40,6 +53,18 @@ struct Ordervec : protected std::vector<elem_t> {
             iter->amount += o.amount;
         else
             insert(iter.base(), std::move(o));
+        total += o.amount;
+    }
+    void insert_largest_asc(ordervec::elem_t o)
+    {
+        if (size() > 0) {
+            if (o.limit == back().limit) {
+                back().amount += o.amount;
+                return;
+            }
+            assert(o.limit > back().limit);
+        }
+        push_back(o);
         total += o.amount;
     }
     void insert_asc(ordervec::elem_t o)
@@ -66,6 +91,8 @@ class OrderbookMatcher_uint64 {
 
     void prepare()
     {
+        if (prepared)
+            return;
         extraBase.resize(0);
         extraQuote.resize(0);
         uint64_t cumsumQuote { 0 };
@@ -90,6 +117,7 @@ class OrderbookMatcher_uint64 {
             extraBase.push_back({ cumsumBase, I });
             cumsumBase -= pushBaseAsc[J - 1 - j].amount;
         }
+        prepared = true;
     }
 
 public:
@@ -97,17 +125,17 @@ public:
     auto insert_base(Order_uint64 o)
     {
         pushBaseAsc.insert_asc(elem_t { o });
-        prepare();
+        prepared = false;
     }
     auto insert_quote(Order_uint64 o)
     {
         pushQuoteDesc.insert_desc(elem_t { o });
-        prepare();
+        prepared = false;
     }
     bool delete_quote(size_t i)
     {
         if (pushQuoteDesc.delete_at(i)) {
-            prepare();
+            prepared = false;
             return true;
         }
         return false;
@@ -116,7 +144,7 @@ public:
     bool delete_base(size_t i)
     {
         if (pushBaseAsc.delete_at(pushBaseAsc.size() - 1 - i)) {
-            prepare();
+            prepared = false;
             return true;
         }
         return false;

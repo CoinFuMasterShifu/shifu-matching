@@ -5,6 +5,7 @@ namespace defi {
 auto OrderbookMatcher_uint64::match(Pool_uint64& p)
     -> MatchResult_uint64
 {
+    prepare();
     const size_t I { pushQuoteDesc.size() };
     const size_t J { pushBaseAsc.size() };
     size_t i0 { 0 };
