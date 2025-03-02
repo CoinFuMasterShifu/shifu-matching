@@ -10,7 +10,7 @@ auto OrderbookMatcher_uint64::match(Pool_uint64& p)
     size_t i0 { 0 };
     size_t i1 { I };
 
-    Matcher m { pushBaseAsc.total_push(), pushQuoteDesc.total_push(), p };
+    Matcher m { p };
 
     while (i0 != i1) {
         auto i { (i0 + i1) / 2 };

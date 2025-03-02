@@ -19,10 +19,9 @@ std::optional<Delta_uint64> balance_pool_interaction(const PoolLiquidity_uint64)
 
 class FilledAndPool {
 public:
-    FilledAndPool(uint64_t basePool, uint64_t baseIn, uint64_t quotePool,
-        uint64_t quoteIn)
-        : in { baseIn, quoteIn }
-        , pool { basePool, quotePool }
+    FilledAndPool(BaseQuote_uint64 in, PoolLiquidity_uint64 pool)
+        : in { std::move(in) }
+        , pool { std::move(pool) }
     {
     }
     std::optional<Delta_uint64> balance_pool_interaction() const;
@@ -38,10 +37,8 @@ public:
 
 class Matcher : public FilledAndPool {
 public:
-    Matcher(uint64_t totalBasePush, uint64_t totalQuotePush, Pool_uint64& p)
-        : FilledAndPool(p.base_total(), 0, p.quote_total(), 0)
-        , toPool0 { false, totalBasePush } // TODO: initialize with pool
-        , toPool1 { true, totalQuotePush }
+    Matcher(PoolLiquidity_uint64& p)
+        : FilledAndPool({ 0, 0 }, std::move(p))
     {
     }
 
@@ -65,6 +62,8 @@ public:
         const uint64_t fill0,
         const uint64_t fill1, Price p)
     {
+        assert(toPool0.has_value() // by the time this function is executed,
+            && toPool1.has_value()); // we have seen both cases.
         auto v0 { fill0 };
         auto v1 { fill1 };
         auto& v { isQuote ? in.quote : in.base };
@@ -77,9 +76,9 @@ public:
                 v1 = v;
         }
 
-        v = (toPool0.isQuote ? v0 : v1);
+        v = (toPool0->isQuote ? v0 : v1);
         auto toPool { [&]() -> std::optional<Delta_uint64> {
-            auto& ref { toPool0.isQuote ? toPool0 : toPool1 };
+            auto& ref { toPool0->isQuote ? *toPool0 : *toPool1 };
             if (ref.amount == 0)
                 return {};
             return ref;
@@ -87,7 +86,7 @@ public:
 
         return { .toPool { toPool }, .filled { in } };
     };
-    Delta_uint64 toPool0;
-    Delta_uint64 toPool1;
+    std::optional<Delta_uint64> toPool0;
+    std::optional<Delta_uint64> toPool1;
 };
 }

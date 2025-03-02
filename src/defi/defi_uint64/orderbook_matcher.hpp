@@ -130,6 +130,7 @@ private:
 
     Ordervec pushBaseAsc; // limit price ASC (sell)
     std::vector<ExtraData> extraBase;
+    bool prepared { false };
 };
 } // namespace ordervec
 using ordervec::OrderbookMatcher_uint64;
