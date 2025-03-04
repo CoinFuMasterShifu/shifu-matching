@@ -1,7 +1,7 @@
 #pragma once
 #include "../funds.hpp"
-#include "defi_uint64/orderbook_matcher.hpp"
-#include "defi_uint64/pool.hpp"
+#include "uint64/orderbook.hpp"
+#include "uint64/pool.hpp"
 namespace defi {
 
 struct Order {
@@ -129,12 +129,32 @@ struct BaseQuote {
         return PriceRelative::from_fraction(quote.E8(), base.E8());
     }
 };
+
+class MatchResult {
+public:
+    MatchResult(MatchResult_uint64 mr)
+        : mr(std::move(mr))
+    {
+    }
+    std::optional<Delta> to_pool() const
+    {
+        if (mr.toPool)
+            return Delta(*mr.toPool);
+        return {};
+    }
+    BaseQuote filled() const { return mr.filled; }
+
+private:
+    MatchResult_uint64 mr;
+};
+
 inline BaseQuote Delta::base_quote() const
 {
     if (is_quote())
         return { Funds::zero(), amount() };
     return { amount(), Funds::zero() };
 }
+
 class BuySellOrders {
     class OrderView {
     public:
@@ -152,7 +172,7 @@ class BuySellOrders {
 
     class OrderVecView {
     public:
-        OrderVecView(const ordervec::Ordervec& ov)
+        OrderVecView(const SortedOrderVector_uint64& ov)
             : ov(ov)
         {
         }
@@ -160,25 +180,7 @@ class BuySellOrders {
         auto size() const { return ov.size(); }
 
     private:
-        const ordervec::Ordervec& ov;
-    };
-
-    class MatchResult {
-    public:
-        MatchResult(MatchResult_uint64 mr)
-            : mr(std::move(mr))
-        {
-        }
-        std::optional<Delta> to_pool() const
-        {
-            if (mr.toPool)
-                return Delta(*mr.toPool);
-            return {};
-        }
-        BaseQuote filled() const { return mr.filled; }
-
-    private:
-        MatchResult_uint64 mr;
+        const SortedOrderVector_uint64& ov;
     };
 
 public:
@@ -212,7 +214,7 @@ public:
     }
 
 private:
-    OrderbookMatcher_uint64 buySellOrders_uint64;
+    Orderbook_uint64 buySellOrders_uint64;
 };
 
 } // namespace defi

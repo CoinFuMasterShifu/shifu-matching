@@ -9,6 +9,7 @@ namespace defi {
 struct FillResult_uint64 {
     std::optional<Delta_uint64> toPool;
     BaseQuote_uint64 filled;
+    bool operator==(const FillResult_uint64&) const = default;
 };
 
 using MatchResult_uint64 = FillResult_uint64;
@@ -37,7 +38,7 @@ public:
 
 class Matcher : public FilledAndPool {
 public:
-    Matcher(PoolLiquidity_uint64& p)
+    Matcher(PoolLiquidity_uint64 p)
         : FilledAndPool({ 0, 0 }, std::move(p))
     {
     }

@@ -1,6 +1,6 @@
 #pragma once
 #include "../price.hpp"
-#include "src/defi/defi_uint64/types.hpp"
+#include "src/defi/uint64/types.hpp"
 #include <cstdint>
 
 namespace defi {

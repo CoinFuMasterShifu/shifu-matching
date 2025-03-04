@@ -3,8 +3,14 @@
 #include <cstdint>
 
 namespace defi {
+struct Order_uint64 {
+    uint64_t amount;
+    Price limit;
+};
+
 struct BaseQuote_uint64;
 struct Delta_uint64 {
+    bool operator==(const Delta_uint64&) const = default;
     bool isQuote { false };
     uint64_t amount;
     BaseQuote_uint64 base_quote() const;
@@ -13,6 +19,7 @@ struct Delta_uint64 {
 struct BaseQuote_uint64 {
     uint64_t base;
     uint64_t quote;
+    bool operator==(const BaseQuote_uint64&) const = default;
     BaseQuote_uint64(uint64_t base, uint64_t quote)
         : base(base)
         , quote(quote)

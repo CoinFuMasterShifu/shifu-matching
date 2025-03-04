@@ -1,7 +1,6 @@
 #pragma once
 #include <bit>
 #include <cassert>
-#include <compare>
 #include <cstdint>
 #include <optional>
 class Prod192;

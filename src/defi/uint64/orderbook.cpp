@@ -1,11 +1,50 @@
-#include "orderbook_matcher.hpp"
+#include "orderbook.hpp"
 #include "pool.hpp"
 
 namespace defi {
-auto OrderbookMatcher_uint64::match(Pool_uint64& p)
+namespace{
+    struct PreparedExtradata {
+        struct ExtraData {
+            uint64_t cumsum;
+            size_t upperBoundCounterpart;
+        };
+        PreparedExtradata(const Orderbook_uint64& b)
+        {
+            extraBase.resize(0);
+            extraQuote.resize(0);
+            uint64_t cumsumQuote { 0 };
+            const size_t J { b.base_asc_sell().size() };
+            const size_t I { b.quote_desc_buy().size() };
+            uint64_t cumsumBase { b.base_asc_sell().total_push() };
+            size_t j { 0 };
+            extraBase.resize(0);
+            for (size_t i = 0; i < I; ++i) {
+                auto& oq { b.quote_desc_buy()[i] };
+                for (; j < J; ++j) {
+                    auto& ob { b.base_asc_sell()[J - 1 - j] };
+                    if (ob.limit <= oq.limit)
+                        break;
+                    extraBase.push_back({ cumsumBase, i });
+                    cumsumBase -= ob.amount;
+                }
+                extraQuote.push_back({ cumsumQuote, j });
+                cumsumQuote += oq.amount;
+            }
+            for (; j < J; ++j) {
+                extraBase.push_back({ cumsumBase, I });
+                cumsumBase -= b.base_asc_sell()[J - 1 - j].amount;
+            }
+        }
+        std::vector<ExtraData> extraQuote;
+        std::vector<ExtraData> extraBase;
+    };
+}
+auto Orderbook_uint64::match(const PoolLiquidity_uint64& p) const
     -> MatchResult_uint64
 {
-    prepare();
+    PreparedExtradata prepared{*this};
+    const auto& extraQuote { prepared.extraQuote };
+    const auto& extraBase { prepared.extraBase };
     const size_t I { pushQuoteDesc.size() };
     const size_t J { pushBaseAsc.size() };
     size_t i0 { 0 };

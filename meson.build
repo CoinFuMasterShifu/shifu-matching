@@ -4,8 +4,8 @@ project('defi', 'cpp',
                      'cpp_std=c++20'])
 
 src = files([
-'./src/defi/defi_uint64/orderbook_matcher.cpp',
-'./src/defi/defi_uint64/matcher.cpp',
+'./src/defi/uint64/orderbook.cpp',
+'./src/defi/uint64/matcher.cpp',
 'src/funds.cpp'
 ])
 
