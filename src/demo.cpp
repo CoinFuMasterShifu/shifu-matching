@@ -29,7 +29,7 @@ json match_result() {
 
   const defi::Pool p{*poolToken, *poolWart};
   auto pTmp{p};
-  auto match_res{bso.match(pTmp)};
+  auto match_res{bso.match_assert_lazy(pTmp)};
   json buys(json::array());
 
   auto fquote{match_res.filled().quote};

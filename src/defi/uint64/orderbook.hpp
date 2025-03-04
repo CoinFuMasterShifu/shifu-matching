@@ -3,25 +3,23 @@
 #include "sorted_order_vector.hpp"
 
 namespace defi {
-
-
 class Orderbook_uint64 {
 
 public:
     [[nodiscard]] MatchResult_uint64 match(const PoolLiquidity_uint64& p) const;
-    auto insert_largest_base(Order_uint64 o)
+    void insert_largest_base(Order_uint64 o)
     {
-        pushBaseAsc.insert_largest_asc(std::move(o));
+        return pushBaseAsc.insert_largest_asc(std::move(o));
     }
-    auto insert_base(Order_uint64 o)
+    void insert_base(Order_uint64 o)
     {
-        pushBaseAsc.insert_asc(std::move(o));
+        return pushBaseAsc.insert_asc(std::move(o));
     }
-    auto insert_smallest_quote(Order_uint64 o)
+    void insert_smallest_quote(Order_uint64 o)
     {
         pushQuoteDesc.insert_smallest_desc(std::move(o));
     }
-    auto insert_quote(Order_uint64 o)
+    void insert_quote(Order_uint64 o)
     {
         pushQuoteDesc.insert_desc(std::move(o));
     }
@@ -32,7 +30,6 @@ public:
         }
         return false;
     }
-
     bool delete_base(size_t i)
     {
         if (pushBaseAsc.delete_at(pushBaseAsc.size() - 1 - i)) {

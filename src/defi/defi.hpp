@@ -184,10 +184,7 @@ class BuySellOrders {
     };
 
 public:
-    [[nodiscard]] MatchResult match(Pool& p)
-    {
-        return buySellOrders_uint64.match(p.pool_uint64);
-    }
+    [[nodiscard]] MatchResult match_assert_lazy(Pool& p);
     auto insert_base(Order o)
     {
         return buySellOrders_uint64.insert_base(

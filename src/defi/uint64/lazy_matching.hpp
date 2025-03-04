@@ -7,7 +7,7 @@
 
 namespace defi {
 
-MatchResult_uint64 match_lazy(auto loadSellAsc, auto loadBuyDesc, const PoolLiquidity_uint64& pool)
+[[nodiscard]] MatchResult_uint64 match_lazy(auto loadSellAsc, auto loadBuyDesc, const PoolLiquidity_uint64& pool)
 {
     assert(pool.price()); // TODO: ensure the pool is non-degenerate
     const auto price { *pool.price() };

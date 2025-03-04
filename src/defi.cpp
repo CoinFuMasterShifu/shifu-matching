@@ -45,7 +45,7 @@ std::ostream &operator<<(std::ostream &os, const Funds &f) {
   return os << f.to_string();
 }
 void print_match(BuySellOrders &bso, Pool &p) {
-  auto res{bso.match(p)};
+  auto res{bso.match_assert_lazy(p)};
   auto tp{res.to_pool()};
   if (tp) {
     cout << "to pool: " << tp->amount() << " ("
