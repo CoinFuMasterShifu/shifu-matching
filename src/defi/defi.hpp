@@ -160,7 +160,7 @@ class BuySellOrders {
     public:
         Funds amount() const
         {
-            return Funds::from_value_throw(order_uint64.amount);
+            return Funds::from_value_throw(order_uint64.amount.value());
         }
         auto limit() const { return order_uint64.limit; }
         OrderView(const Order_uint64& o)

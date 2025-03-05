@@ -15,7 +15,7 @@ struct PreparedExtradata {
         uint64_t cumsumQuote { 0 };
         const size_t J { b.base_asc_sell().size() };
         const size_t I { b.quote_desc_buy().size() };
-        uint64_t cumsumBase { b.base_asc_sell().total_push() };
+        uint64_t cumsumBase { b.base_asc_sell().total_push().value() };
         size_t j { 0 };
         extraBase.resize(0);
         for (size_t i = 0; i < I; ++i) {
@@ -25,14 +25,14 @@ struct PreparedExtradata {
                 if (ob.limit <= oq.limit)
                     break;
                 extraBase.push_back({ cumsumBase, i });
-                cumsumBase -= ob.amount;
+                cumsumBase -= ob.amount.value();
             }
             extraQuote.push_back({ cumsumQuote, j });
-            cumsumQuote += oq.amount;
+            cumsumQuote += oq.amount.value();
         }
         for (; j < J; ++j) {
             extraBase.push_back({ cumsumBase, I });
-            cumsumBase -= b.base_asc_sell()[J - 1 - j].amount;
+            cumsumBase -= b.base_asc_sell()[J - 1 - j].amount.value();
         }
     }
     std::vector<ExtraData> extraQuote;
@@ -76,7 +76,7 @@ auto Orderbook_uint64::match(const PoolLiquidity_uint64& p) const
             return m.bisect_dynamic_price();
         } else {
             auto j { j1 - 1 };
-            m.in.base = extraBase[j].cumsum - pushBaseAsc[J - 1 - j].amount;
+            m.in.base = extraBase[j].cumsum - pushBaseAsc[J - 1 - j].amount.value();
             auto price { pushBaseAsc[J - 1 - j].limit };
             if (m.bisection_step(price)) {
                 return m.bisect_dynamic_price();
@@ -96,7 +96,7 @@ auto Orderbook_uint64::match(const PoolLiquidity_uint64& p) const
         auto price { pushQuoteDesc[i].limit };
         auto j { eq.upperBoundCounterpart };
         m.in.base = (j == J ? 0 : extraBase[j].cumsum);
-        m.in.quote = eq.cumsum + pushQuoteDesc[i].amount;
+        m.in.quote = eq.cumsum + pushQuoteDesc[i].amount.value();
         size_t j0 = extraQuote[i].upperBoundCounterpart;
         if (m.bisection_step(price)) {
             size_t j1 = (i1 < I ? extraQuote[i1].upperBoundCounterpart : J);

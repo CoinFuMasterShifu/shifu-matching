@@ -1,10 +1,11 @@
 #pragma once
 #include "price.hpp"
+#include "general/funds.hpp"
 #include <cstdint>
 
 namespace defi {
 struct Order_uint64 {
-    uint64_t amount;
+    Funds_uint64 amount;
     Price_uint64 limit;
 };
 
