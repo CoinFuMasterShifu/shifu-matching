@@ -6,7 +6,7 @@ namespace defi {
 
 struct Order {
     Funds amount;
-    Price limit;
+    Price_uint64 limit;
 };
 
 class Pool {
@@ -126,7 +126,7 @@ struct BaseQuote {
     }
     auto price() const
     {
-        return PriceRelative::from_fraction(quote.E8(), base.E8());
+        return PriceRelative_uint64::from_fraction(quote.E8(), base.E8());
     }
 };
 

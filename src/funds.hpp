@@ -1,6 +1,6 @@
 #pragma once
-#include "errors.hpp"
-#include "with_uint64.hpp"
+#include "general/errors.hpp"
+#include "general/with_uint64.hpp"
 #include <cassert>
 #include <optional>
 

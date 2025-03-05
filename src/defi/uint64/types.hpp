@@ -1,11 +1,11 @@
 #pragma once
-#include "src/defi/price.hpp"
+#include "price.hpp"
 #include <cstdint>
 
 namespace defi {
 struct Order_uint64 {
     uint64_t amount;
-    Price limit;
+    Price_uint64 limit;
 };
 
 struct BaseQuote_uint64;
@@ -34,7 +34,7 @@ struct BaseQuote_uint64 {
             res.base -= bq.amount;
         return res;
     }
-    Delta_uint64 excess(Price p) const // computes excess
+    Delta_uint64 excess(Price_uint64 p) const // computes excess
     {
         auto q { multiply_floor(base, p) };
         if (q.has_value() && *q <= quote) // too much base
@@ -45,7 +45,7 @@ struct BaseQuote_uint64 {
         assert(*b <= base);
         return { false, base - *b };
     }
-    auto price() const { return PriceRelative::from_fraction(quote, base); }
+    auto price() const { return PriceRelative_uint64::from_fraction(quote, base); }
 };
 
 inline BaseQuote_uint64 Delta_uint64::base_quote() const

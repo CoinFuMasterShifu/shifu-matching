@@ -137,7 +137,7 @@ const char *wrap_fun(const callable &fun, const char *c) {
 defi::Order parse_order(json j) {
   auto price{[&]() {
     try {
-      return Price::from_string(j["price"].get<std::string>()).value();
+      return Price_uint64::from_string(j["price"].get<std::string>()).value();
     } catch (...) {
       throw std::runtime_error("Cannot get price");
     }

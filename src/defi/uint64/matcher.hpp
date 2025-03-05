@@ -2,8 +2,6 @@
 #include "pool.hpp"
 #include "types.hpp"
 
-#include "src/defi/price.hpp"
-
 namespace defi {
 
 struct FillResult_uint64 {
@@ -47,7 +45,7 @@ public:
     // - increase matched quote amount or
     // - decrease matched base amount or
     // - decrease price argument
-    bool bisection_step(Price p)
+    bool bisection_step(Price_uint64 p)
     {
         Delta_uint64 toPool { in.excess(p) };
         if (!pool.modified_pool_price_exceeds(toPool, p)) {
@@ -61,7 +59,7 @@ public:
 
     FillResult_uint64 bisect_fixed_price(const bool isQuote,
         const uint64_t fill0,
-        const uint64_t fill1, Price p)
+        const uint64_t fill1, Price_uint64 p)
     {
         assert(toPool0.has_value() // by the time this function is executed,
             && toPool1.has_value()); // we have seen both cases.

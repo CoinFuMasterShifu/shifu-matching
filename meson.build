@@ -17,6 +17,7 @@ if get_option('emscripten')
 exe = executable('demo', ['src/demo.cpp',src],
   dependencies: json_dep,
   cpp_args:['-fexceptions',],
+  include_directories: ['src'],
   link_args: ['-sMODULARIZE', '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,stringToNewUTF8', '-sEXPORT_ES6',
     '-sNO_DISABLE_EXCEPTION_CATCHING', 
     '-sINITIAL_MEMORY=67108864'
@@ -24,6 +25,7 @@ exe = executable('demo', ['src/demo.cpp',src],
   install : true)
 else
 exe = executable('defi', ['src/defi.cpp',src],
+  include_directories: ['src'],
   dependencies: json_dep,
   install : true)
 endif

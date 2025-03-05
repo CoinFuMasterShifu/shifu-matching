@@ -1,9 +1,9 @@
 #pragma once
 
 #include "matcher.hpp"
-#include "src/defi/uint64/matcher.hpp"
-#include "src/defi/uint64/orderbook.hpp"
-#include "src/defi/uint64/pool.hpp"
+#include "matcher.hpp"
+#include "orderbook.hpp"
+#include "pool.hpp"
 
 namespace defi {
 
@@ -13,7 +13,7 @@ namespace defi {
     const auto price { *pool.price() };
 
     Orderbook_uint64 ob;
-    std::optional<Price> lower, upper;
+    std::optional<Price_uint64> lower, upper;
     BaseQuote_uint64 filled { 0, 0 };
 
     // load sell orders below pool price
@@ -56,7 +56,7 @@ namespace defi {
         }
     }
 
-    auto more_quote_less_base = [&](Price p) {
+    auto more_quote_less_base = [&](Price_uint64 p) {
         Delta_uint64 toPool { filled.excess(p) };
         return !pool.modified_pool_price_exceeds(toPool, p);
     };

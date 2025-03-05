@@ -7,32 +7,32 @@ using namespace defi;
 
 namespace test {
 void print_from_fraction() {
-  cout << (PriceRelative::from_fraction(2, 3) < *Price::from_double(0.6))
+  cout << (PriceRelative_uint64::from_fraction(2, 3) < *Price_uint64::from_double(0.6))
        << endl;
-  cout << (PriceRelative::from_fraction(2, 3) < *Price::from_double(0.7))
+  cout << (PriceRelative_uint64::from_fraction(2, 3) < *Price_uint64::from_double(0.7))
        << endl;
 
-  cout << (PriceRelative::from_fraction(3, 2) < *Price::from_double(1.4))
+  cout << (PriceRelative_uint64::from_fraction(3, 2) < *Price_uint64::from_double(1.4))
        << endl;
-  cout << (PriceRelative::from_fraction(3, 2) < *Price::from_double(1.5))
+  cout << (PriceRelative_uint64::from_fraction(3, 2) < *Price_uint64::from_double(1.5))
        << endl;
-  cout << (PriceRelative::from_fraction(3, 2) < *Price::from_double(1.6))
+  cout << (PriceRelative_uint64::from_fraction(3, 2) < *Price_uint64::from_double(1.6))
        << endl;
 }
 void multiply_floor() {
-  auto p{Price::from_double(0.0991).value()};
+  auto p{Price_uint64::from_double(0.0991).value()};
   cout << std::setprecision(15) << p.to_double() << endl;
-  auto pr = [](uint64_t a, Price p) {
+  auto pr = [](uint64_t a, Price_uint64 p) {
     cout << a << "*" << p.to_double() << " = " << ::multiply_floor(a, p).value()
          << endl;
   };
   pr(100ull, p);
 }
 void from_fraction() {
-  auto p{Price::from_double(0.0991).value()};
+  auto p{Price_uint64::from_double(0.0991).value()};
   cout << std::setprecision(15) << p.to_double() << endl;
   auto print = [](uint64_t a, uint64_t b) {
-    auto pr{PriceRelative::from_fraction(a, b).value()};
+    auto pr{PriceRelative_uint64::from_fraction(a, b).value()};
     cout << a << "/" << b << " in [" << pr.price.to_double() << ", "
          << pr.ceil()->to_double() << "]";
   };
@@ -51,7 +51,7 @@ void print_match(BuySellOrders &bso, Pool &p) {
     cout << "to pool: " << tp->amount() << " ("
          << (tp->is_quote() ? "quote" : "base") << ")\n";
   }
-  cout << "Price: (Pool before): " << p.price().value().price.to_double() << endl;
+  cout << "Price_uint64: (Pool before): " << p.price().value().price.to_double() << endl;
   if (tp) {
     if (tp->is_quote()) {
       p.buy(tp->amount());
@@ -79,12 +79,12 @@ int main() {
   cout << "Pool " << p.base_total() << " " << p.quote_total() << endl;
   BuySellOrders bso;
   bso.insert_base(
-      Order(coins(100), Price::from_double(1).value()));
+      Order(coins(100), Price_uint64::from_double(1).value()));
   bso.insert_base(
-      Order(coins(100), Price::from_double(0.5).value()));
+      Order(coins(100), Price_uint64::from_double(0.5).value()));
   bso.insert_quote(
-      Order(coins(100), Price::from_double(4).value()));
+      Order(coins(100), Price_uint64::from_double(4).value()));
   bso.insert_quote(
-      Order(coins(100), Price::from_double(3).value()));
+      Order(coins(100), Price_uint64::from_double(3).value()));
   print_match(bso, p);
 }

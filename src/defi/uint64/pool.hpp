@@ -1,6 +1,6 @@
 #pragma once
-#include "../price.hpp"
-#include "src/defi/uint64/types.hpp"
+#include "price.hpp"
+#include "types.hpp"
 #include <cstdint>
 
 namespace defi {
@@ -25,19 +25,19 @@ struct PoolLiquidity_uint64 : public BaseQuote_uint64 {
 
     // relation of pool price (affected by adding given quoteToPool) to given price
     [[nodiscard]] std::strong_ordering rel_quote_price(uint64_t quoteToPool,
-        Price p) const
+        Price_uint64 p) const
     {
         return compare_fraction(price_ratio_added_quote(quoteToPool), p);
     }
 
     // relation of pool price (affected by pushing given baseToPool) to given price
     [[nodiscard]] std::strong_ordering rel_base_price(uint64_t baseToPool,
-        Price p) const
+        Price_uint64 p) const
     {
         return compare_fraction(price_ratio_added_base(baseToPool), p);
     }
 
-    [[nodiscard]] bool modified_pool_price_exceeds(const Delta_uint64& toPool, Price p) const
+    [[nodiscard]] bool modified_pool_price_exceeds(const Delta_uint64& toPool, Price_uint64 p) const
     {
         if (toPool.isQuote)
             return rel_quote_price(toPool.amount, p) == std::strong_ordering::greater;
