@@ -1,7 +1,6 @@
 #pragma once
 
 #include "matcher.hpp"
-#include "matcher.hpp"
 #include "orderbook.hpp"
 #include "pool.hpp"
 
@@ -26,7 +25,7 @@ namespace defi {
         ob.insert_largest_base(*o);
         if (o->limit < price) {
             lower = o->limit;
-            filled.base += o->amount.value();
+            filled.base.add_assert(o->amount.value());
             I = ob.base_asc_sell().size();
         } else {
             upper = o->limit;
@@ -46,7 +45,7 @@ namespace defi {
         if (o->limit > price) {
             if (!upper || *upper > o->limit)
                 upper = o->limit;
-            filled.quote += o->amount.value();
+            filled.quote.add_assert(o->amount.value());
             J = ob.quote_desc_buy().size();
         } else {
             if (!lower || *lower < o->limit)
@@ -75,13 +74,13 @@ namespace defi {
 
     auto shift_buy_higher { [&]() {
         assert(J != 0);
-        filled.quote -= upper_buy_bound()->amount.value();
+        filled.quote.subtract_assert(upper_buy_bound()->amount.value());
         J -= 1;
     } };
 
     auto shift_sell_smaller { [&]() {
         assert(I != 0);
-        filled.base -= upper_buy_bound()->amount.value();
+        filled.base.subtract_assert(upper_buy_bound()->amount.value());
         I -= 1;
     } };
 
@@ -96,7 +95,7 @@ namespace defi {
                 else
                     break;
             }
-            filled.base += nextSell->amount.value();
+            filled.base.add_assert(nextSell->amount.value());
             if (more_quote_less_base(nextSell->limit))
                 break;
             nextSell = loadSellAsc();
@@ -112,7 +111,7 @@ namespace defi {
                 else
                     break;
             }
-            filled.quote += nextBuy->amount.value();
+            filled.quote.add_assert(nextBuy->amount.value());
             if (!more_quote_less_base(nextBuy->limit))
                 break;
             nextBuy = loadBuyDesc();

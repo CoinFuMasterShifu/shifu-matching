@@ -34,11 +34,11 @@ public:
     }
     Funds base_total() const
     {
-        return Funds::from_value_throw(pool_uint64.base_total());
+        return Funds::from_value_throw(pool_uint64.base_total().value());
     }
     Funds quote_total() const
     {
-        return Funds::from_value_throw(pool_uint64.quote_total());
+        return Funds::from_value_throw(pool_uint64.quote_total().value());
     }
     auto price() const { return pool_uint64.price(); }
 
@@ -72,7 +72,7 @@ struct Delta {
         : d(std::move(d))
     {
     }
-    Funds amount() const { return Funds::from_value_throw(d.amount); }
+    Funds amount() const { return Funds::from_value_throw(d.amount.value()); }
     bool is_quote() const { return d.isQuote; }
     bool is_base() const { return !is_quote(); }
     BaseQuote base_quote() const;
@@ -83,8 +83,8 @@ private:
 
 struct BaseQuote {
     BaseQuote(BaseQuote_uint64 bq)
-        : base(Funds::from_value_throw(bq.base))
-        , quote(Funds::from_value_throw(bq.quote))
+        : base(Funds::from_value_throw(bq.base.value()))
+        , quote(Funds::from_value_throw(bq.quote.value()))
     {
     }
     BaseQuote(Funds base, Funds quote)

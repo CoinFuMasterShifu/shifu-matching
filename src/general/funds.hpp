@@ -157,7 +157,8 @@ public:
         return *s;
     }
 
-    Funds &subtract_throw(Funds f) {
+    Funds& subtract_throw(Funds f)
+    {
         *this = diff_throw(*this, f);
         return *this;
     }

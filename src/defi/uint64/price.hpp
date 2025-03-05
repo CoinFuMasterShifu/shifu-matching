@@ -22,11 +22,13 @@ private:
     }
 
 public:
-    static auto from_uint32(uint32_t data){
-        return compose(data &0x0000FFFFu, data >> 16);
+    static auto from_uint32(uint32_t data)
+    {
+        return compose(data & 0x0000FFFFu, data >> 16);
     }
-    uint32_t to_uint32() const{
-        return uint32_t(_m) + (uint32_t(_e)<<16);
+    uint32_t to_uint32() const
+    {
+        return uint32_t(_m) + (uint32_t(_e) << 16);
     }
     [[nodiscard]] static Price_uint64 zero() { return Price_uint64 { 0, 0 }; }
     [[nodiscard]] static Price_uint64 max() { return Price_uint64 { 0xFFFFu, 127 }; }
@@ -138,7 +140,7 @@ struct PriceRelative_uint64 { // gives details relative to price grid
         uint64_t denominator)
     { // OK
         if (numerator == 0) {
-            if (denominator == 0) 
+            if (denominator == 0)
                 return {}; // no price for degenerate pool (no liquidity at all)
             return PriceRelative_uint64 { Price_uint64::zero(), true };
         } else if (denominator == 0)
