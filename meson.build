@@ -6,7 +6,7 @@ project('defi', 'cpp',
 src = files([
 './src/defi/uint64/orderbook.cpp',
 './src/defi/uint64/matcher.cpp',
-'src/funds.cpp',
+'src/general/funds.cpp',
 'src/defi/defi.cpp'
 ])
 

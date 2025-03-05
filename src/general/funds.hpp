@@ -111,7 +111,6 @@ public:
     static std::optional<Funds> parse(std::string_view);
     static Funds parse_throw(std::string_view);
     bool is_zero() const { return val == 0; }
-    // std::string format(std::string_view unit) const;
     std::string to_string() const;
     uint64_t E8() const { return val; };
 
