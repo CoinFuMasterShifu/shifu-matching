@@ -3,7 +3,6 @@
 #include "matcher.hpp"
 #include "orderbook.hpp"
 #include "pool.hpp"
-#include <iostream>
 using namespace std;
 
 namespace defi {
@@ -21,7 +20,6 @@ namespace defi {
     size_t I { 0 }; // sell index bound
     std::optional<Price_uint64> p;
     while (true) {
-        cout << "S0 -----------------------\n";
         auto np { loaderSellAsc.next_price() };
         if (!np)
             break;
@@ -30,12 +28,10 @@ namespace defi {
         if (*p <= price) {
             Order_uint64 o { loaderSellAsc.load_next_order() };
             ob.insert_largest_base(o);
-            cout << "S1 " << o.limit.to_double() << "-----------------------\n";
             lower = o.limit;
             filled.base.add_assert(o.amount.value());
             I = ob.base_asc_sell().size();
         } else {
-            cout << "S2 -----------------------\n";
             upper = *p;
             break;
         }
@@ -45,17 +41,14 @@ namespace defi {
     size_t J { 0 }; // buy index bound
     p.reset();
     while (true) {
-        cout << "B0 -----------------------\n";
         auto np { loaderBuyDesc.next_price() };
         if (!np)
             break;
-        cout << "B0 "<<np->to_double()<<endl;
         assert(!p || *p > *np); // prices must be strictly decreasing
         p = np;
         if (*p > price) { // now require strictness to avoid selecting degenerate (zero-length) section
             Order_uint64 o { loaderBuyDesc.load_next_order() };
             ob.insert_smallest_quote(o);
-            cout << "B1 " << o.limit.to_double() << "-----------------------\n";
             if (!upper || *upper > o.limit)
                 upper = o.limit;
             filled.quote.add_assert(o.amount.value());
@@ -63,9 +56,6 @@ namespace defi {
         } else {
             if (!lower || *lower < *p)
                 lower = *p;
-            cout << "B2-----------------------\n";
-            cout << "*p: "<<p->to_double()<<endl;
-            cout << "lower: "<<lower->to_double()<<endl;
             break;
         }
     }
@@ -86,7 +76,6 @@ namespace defi {
     auto lower_sell_bound { [&]() -> const Order_uint64* {
         if (I == 0)
             return nullptr;
-        cout << "I = " << I << endl;
         return &ob.base_asc_sell()[I - 1];
     } };
 
@@ -102,22 +91,9 @@ namespace defi {
         I -= 1;
     } };
 
-    cout << "Shifts------------------------\n";
-    cout << " lower: ";
-    if (lower) {
-        cout << lower->to_double();
-    }
-    cout<< endl;
-    cout << " upper: ";
-    if (upper) {
-        cout << upper->to_double();
-    }
-    cout<< endl;
     if (upper && !more_quote_less_base(*upper)) {
-        cout << "S -----------------------\n";
         std::optional<Price_uint64> np { loaderSellAsc.next_price() };
         while (np) {
-            cout << "S1 " << np->to_double() << "-----------------------\n";
 
             while (auto b { upper_buy_bound() }) {
                 if (b->limit < *np)
@@ -126,10 +102,8 @@ namespace defi {
                     break;
             }
 
-            cout << "S3 -----------------------\n";
             if (more_quote_less_base(*np))
                 break;
-            cout << "S4 -----------------------\n";
             Order_uint64 o { loaderSellAsc.load_next_order() };
             assert(*np == o.limit);
             ob.insert_largest_base(o);
@@ -137,10 +111,8 @@ namespace defi {
             np = loaderSellAsc.next_price();
         }
     } else if (lower && more_quote_less_base(*lower)) {
-        cout << "B -----------------------\n";
         std::optional<Price_uint64> np { loaderBuyDesc.next_price() };
         while (np) {
-            cout << "B1 " << np->to_double() << "-----------------------\n";
 
             while (auto b { lower_sell_bound() }) {
                 if (b->limit > *np)
@@ -149,11 +121,9 @@ namespace defi {
                     break;
             }
 
-            cout << "B3 -----------------------\n";
 
             if (!more_quote_less_base(*np))
                 break;
-            cout << "B4 -----------------------\n";
             Order_uint64 o { loaderBuyDesc.load_next_order() };
             assert(*np == o.limit);
             ob.insert_smallest_quote(o);
@@ -161,10 +131,8 @@ namespace defi {
             np = loaderBuyDesc.next_price();
         }
     }
-    cout << "D -----------------------\n";
 
     using namespace std;
-    cout << "lazy_match order book loaded" << endl;
     return ob.match(pool);
 }
 }
