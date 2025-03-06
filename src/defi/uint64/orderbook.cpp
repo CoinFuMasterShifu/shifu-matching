@@ -1,5 +1,6 @@
 #include "orderbook.hpp"
 #include "pool.hpp"
+#include <iostream>
 
 namespace defi {
 namespace {
@@ -42,9 +43,28 @@ struct PreparedExtradata {
 auto Orderbook_uint64::match(const PoolLiquidity_uint64& p) const
     -> MatchResult_uint64
 {
+    using namespace std;
+    auto print_vec {
+        [](auto& vec) {
+            for (size_t i { 0 }; i < vec.size(); ++i) {
+                cout << "Limit: " << vec[i].limit.to_double() << " amount: " << vec[i].amount.value() << endl;
+            }
+        }
+    };
+
+    cout << "Base sell" << endl;
+    print_vec(base_asc_sell());
+    cout << "Quote buy" << endl;
+    print_vec(quote_desc_buy());
     PreparedExtradata prepared { *this };
     const auto& extraQuote { prepared.extraQuote };
     const auto& extraBase { prepared.extraBase };
+    for (auto &e : extraQuote) {
+        cout<< "cumsum: "<<e.cumsum<<" K="<<e.upperBoundCounterpart<<endl;
+    }
+    for (auto &e : extraBase) {
+        cout<< "cumsum: "<<e.cumsum<<" K="<<e.upperBoundCounterpart<<endl;
+    }
     const size_t I { pushQuoteDesc.size() };
     const size_t J { pushBaseAsc.size() };
     size_t i0 { 0 };

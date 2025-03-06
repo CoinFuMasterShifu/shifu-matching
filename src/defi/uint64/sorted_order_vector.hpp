@@ -23,6 +23,7 @@ struct SortedOrderVector_uint64 {
     bool delete_at(size_t i)
     {
         if (i < size()) {
+            total.subtract_assert(v[i].amount);
             v.erase(v.begin() + i);
             return true;
         }
@@ -30,13 +31,8 @@ struct SortedOrderVector_uint64 {
     }
     void insert_smallest_desc(Order_uint64 o)
     {
-        if (size() > 0) {
-            if (o.limit == v.back().limit) {
-                v.back().amount.add_assert(o.amount);
-                return;
-            }
+        if (size() > 0)
             assert(o.limit < v.back().limit);
-        }
         v.push_back(o);
         total.add_assert(o.amount);
     }
@@ -52,13 +48,8 @@ struct SortedOrderVector_uint64 {
     }
     void insert_largest_asc(Order_uint64 o)
     {
-        if (size() > 0) {
-            if (o.limit == v.back().limit) {
-                v.back().amount.add_assert(o.amount);
-                return;
-            }
+        if (size() > 0)
             assert(o.limit > v.back().limit);
-        }
         v.push_back(o);
         total.add_assert(o.amount);
     }

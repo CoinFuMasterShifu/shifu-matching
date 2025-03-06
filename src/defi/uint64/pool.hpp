@@ -53,9 +53,6 @@ public:
     {
         assert(base != 0 && quote != 0);
     }
-    struct Tokens {
-        uint64_t val;
-    };
 
     [[nodiscard]] uint64_t sell(uint64_t baseAdd, uint64_t feeE4 = 10)
     {
@@ -72,6 +69,7 @@ public:
         quote.add_assert(quoteAdd);
         return baseDelta;
     }
+
     [[nodiscard]] uint64_t deposit(Funds_uint64 addBase, Funds_uint64 addQuote)
     {
         auto s0 { Prod128(base, quote).sqrt() };
@@ -86,6 +84,25 @@ public:
         tokensTotal = *newTokensTotal;
         return result;
     }
+
+    [[nodiscard]] BaseQuote_uint64 liquidity_equivalent(uint64_t tokens) const
+    {
+        assert(tokens <= tokensTotal);
+        auto b { Prod128(tokens, base).divide_floor(tokensTotal) };
+        assert(b.has_value());
+        auto q { Prod128(tokens, quote).divide_floor(tokensTotal) };
+        assert(q.has_value());
+        return { *b, *q };
+    }
+
+    void withdraw(BaseQuote_uint64 liquidity, uint64_t tokens)
+    {
+        base.subtract_assert(liquidity.base);
+        quote.subtract_assert(liquidity.quote);
+        assert(tokensTotal >= tokens);
+        tokensTotal -= tokens;
+    }
+
     auto base_total() const { return base; }
     auto quote_total() const { return quote; }
 
@@ -94,17 +111,16 @@ private:
     {
         if (value == 0)
             return 0;
-        auto e = std::countl_zero(value);
-        value <<= e;
-        auto d { value / 10000 };
-        bool exact { d * 10000 == value };
-        value -= d * feeE4;
-        if (!exact && value > 0)
-            value -= 1;
-        return value >> e;
+        auto shift = std::countl_zero(value);
+        auto v { value << shift };
+        constexpr size_t E4 { 10000 };
+
+        auto a = E4 - feeE4;
+        auto b = E4;
+        return ((v / b) * a + ((v % b) * a) / b) >> shift;
     }
-    static uint64_t swapped_amount(uint64_t a0, uint64_t a_add, uint64_t b0,
-        uint64_t feeE4)
+
+    static uint64_t swapped_amount(uint64_t a0, uint64_t a_add, uint64_t b0, uint64_t feeE4)
     {
         auto bnew { Prod128(a0, b0).divide_ceil(a0 + a_add) };
         assert(bnew.has_value()); // cannot overflow

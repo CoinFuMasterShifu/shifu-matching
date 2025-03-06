@@ -18,7 +18,6 @@ public:
     static Funds_uint64 parse_throw(std::string_view);
     bool is_zero() const { return val == 0; }
     // std::string format(std::string_view unit) const;
-    std::string to_string() const;
 
     void add_throw(Funds_uint64 add)
     {

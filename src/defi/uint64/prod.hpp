@@ -150,7 +150,7 @@ private:
     [[nodiscard]] std::optional<uint64_t> div(uint64_t v, bool ceil) const
     {
         if (upper == 0)
-            return lower / v;
+            return lower / v + ceil && (lower % v != 0);
         auto shift { std::countl_zero(upper) };
         uint64_t t0 { (upper << shift) + (lower >> (64 - shift)) };
         uint64_t t1 { lower << shift };
@@ -171,15 +171,18 @@ private:
                 uint64_t c { t0 / v };
                 t0 -= c * v;
                 tmp += c;
-            } else if (t0 & 0x8000000000000000ull) {
-                carry = true;
+            } else {
             }
 
             // shift to left
+            if (t0 & 0x8000000000000000ull) {
+                carry = true;
+            }
             t0 <<= 1;
             if (t1 & 0x8000000000000000ull) {
                 t0 += 1;
             }
+            t1 <<= 1;
         }
         if (ceil && t0 > 0) {
             tmp += 1;

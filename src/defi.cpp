@@ -33,7 +33,7 @@ void from_fraction() {
   cout << std::setprecision(15) << p.to_double() << endl;
   auto print = [](uint64_t a, uint64_t b) {
     auto pr{PriceRelative_uint64::from_fraction(a, b).value()};
-    cout << a << "/" << b << " in [" << pr.price.to_double() << ", "
+    cout << a << "/" << b << " in [" << pr.floor().to_double() << ", "
          << pr.ceil()->to_double() << "]";
   };
   auto a{12311231212313122ull};
@@ -51,7 +51,7 @@ void print_match(BuySellOrders &bso, Pool &p) {
     cout << "to pool: " << tp->amount() << " ("
          << (tp->is_quote() ? "quote" : "base") << ")\n";
   }
-  cout << "Price_uint64: (Pool before): " << p.price().value().price.to_double() << endl;
+  cout << "Price_uint64: (Pool before): " << p.price().value().floor().to_double() << endl;
   if (tp) {
     if (tp->is_quote()) {
       p.buy(tp->amount());
@@ -59,10 +59,10 @@ void print_match(BuySellOrders &bso, Pool &p) {
       p.sell(tp->amount());
     }
   }
-  cout << "Price (Pool after):  " << p.price().value().price.to_double() << endl;
+  cout << "Price (Pool after):  " << p.price().value().floor().to_double() << endl;
   auto matched{tp ? res.filled() - tp->base_quote() : res.filled()};
   if (!matched.base.is_zero()) {
-    cout << "Price (matched):     " << matched.price().value().price.to_double()
+    cout << "Price (matched):     " << matched.price().value().floor().to_double()
          << endl;
   }
   cout << "matched (base/quote): (" << matched.base << "/" << matched.quote
@@ -71,20 +71,31 @@ void print_match(BuySellOrders &bso, Pool &p) {
        << res.filled().quote << ")" << endl;
 }
 int main() {
-  using namespace defi;
-  auto coins = [](uint32_t amount) {
-    return Funds::from_value_throw(uint64_t(amount) * 100000000);
-  };
-  Pool p(coins(100), coins(200));
-  cout << "Pool " << p.base_total() << " " << p.quote_total() << endl;
-  BuySellOrders bso;
-  bso.insert_base(
-      Order(coins(100), Price_uint64::from_double(1).value()));
-  bso.insert_base(
-      Order(coins(100), Price_uint64::from_double(0.5).value()));
-  bso.insert_quote(
-      Order(coins(100), Price_uint64::from_double(4).value()));
-  bso.insert_quote(
-      Order(coins(100), Price_uint64::from_double(3).value()));
-  print_match(bso, p);
+    auto base0{Funds::from_value_throw(  10000000000)};
+    auto quote0{Funds::from_value_throw(100000000100)};
+    auto baseSell{Funds::from_value_throw(4)};
+    cout<<"Base0: "<<base0.to_string()<<endl;
+    cout<<"quote0: "<<quote0.to_string()<<endl;
+    cout<<"baseSell: "<<baseSell.to_string()<<endl;
+    Pool p(base0, quote0);
+    auto quoteReturn{p.sell(baseSell,1)};
+    cout<<"quoteReturn: "<<quoteReturn.to_string()<<endl;
+
+  //
+  // using namespace defi;
+  // auto coins = [](uint32_t amount) {
+  //   return Funds::from_value_throw(uint64_t(amount) * 100000000);
+  // };
+  // Pool p(coins(100), coins(200));
+  // cout << "Pool " << p.base_total() << " " << p.quote_total() << endl;
+  // BuySellOrders bso;
+  // bso.insert_base(
+  //     Order(coins(100), Price_uint64::from_double(1).value()));
+  // bso.insert_base(
+  //     Order(coins(100), Price_uint64::from_double(0.5).value()));
+  // bso.insert_quote(
+  //     Order(coins(100), Price_uint64::from_double(4).value()));
+  // bso.insert_quote(
+  //     Order(coins(100), Price_uint64::from_double(3).value()));
+  // print_match(bso, p);
 }

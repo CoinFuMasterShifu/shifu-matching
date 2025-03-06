@@ -104,6 +104,7 @@ private:
     uint8_t _e; // exponent
     uint16_t _m; // mantissa
 };
+
 struct PriceRelative_uint64 { // gives details relative to price grid
     PriceRelative_uint64(Price_uint64 price, bool exact = true)
         : price(std::move(price))
@@ -188,9 +189,11 @@ struct PriceRelative_uint64 { // gives details relative to price grid
         return PriceRelative_uint64 { *p, exact };
     }
     bool operator==(Price_uint64 p2) const { return exact && price == p2; }
+private:
     Price_uint64 price;
     bool exact;
 };
+
 inline std::optional<uint64_t> divide(uint64_t a, Price_uint64 p, bool ceil)
 { // OK
     if (a == 0)
